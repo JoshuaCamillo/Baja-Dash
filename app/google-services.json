@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "488630544872",
+    "firebase_url": "https://baja-dash-default-rtdb.firebaseio.com",
+    "project_id": "baja-dash",
+    "storage_bucket": "baja-dash.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:488630544872:android:96a3209b676cfb9126dc5d",
+        "android_client_info": {
+          "package_name": "com.Baja.Dashboard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKNHeGyAbIhddp0u4UdsCZU9YymUQbECA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:488630544872:android:a5719e3a743393ff26dc5d",
+        "android_client_info": {
+          "package_name": "com.example.dash3"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKNHeGyAbIhddp0u4UdsCZU9YymUQbECA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
