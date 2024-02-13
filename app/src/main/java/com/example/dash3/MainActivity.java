@@ -3,7 +3,9 @@ package com.example.dash3;
 
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -13,11 +15,17 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.AudioManager;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,32 +44,54 @@ import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
 
+import org.w3c.dom.Text;
+
 import java.io.IOException;
 import java.util.List;
 
+public class MainActivity extends AppCompatActivity{
+    public static final long SCREEN_DISPLAY_DURATION = 120000;
+    public static int LB;
+    public static  int RB;
+    public static int LF;
+    public static  int RF;
 
+    public static int board = 115200;
 
-public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     private LocationManager locationManager;
     private UsbSerialInterface usbSerialInterface; // Instantiating the UsbSerialInterface class
     private SensorManager sensorManager;
+    private boolean isSRButtonPressed = false;
+    private boolean isKphSelected = false;
+
+    private static TextView messageLayout;
 
     private Orientation orientation;
     private Sensor gyroSensor;
     private TextView textX, textY, textZ;
     public static double latitude;
     public static double longitude;
-    public static int RPM;
+    public static int RPM = 0;
     public static String speedText ="";
-    public static int speedInt;
-    public static double fuel;
+    public static int speedInt = 0;
+    public static int fuel;
+    public static int battery;
     public static float Xa, Ya, Za = 0.0f;
     public static float Xpos, Ypos, Zpos = 0.0f;
     private RPMGaugeView rpmGauge;
     private boolean speedSelect = false;
-
+    public static String message = "Starting";
+    public static String oldMessage = "Starting";
     public static volatile String data;
+    public static int panic;
+    public static int panicking;
+    private static final int SMS_PERMISSION_REQUEST_CODE = 1;
+    public static int mute = 0;
+
+    int level;
+    int scale;
+    public static int phoneBat;      //battery percentage
 
     private final SensorEventListener gyroListener = new SensorEventListener() {
         @Override
@@ -78,12 +108,17 @@ public class MainActivity extends AppCompatActivity {
             Xa = x;
             Ya = y;
             Za = z;
+
+
         }
     };
     protected void onResume() {
         super.onResume();
         // Register the gyroscope sensor listener
-        sensorManager.registerListener(gyroListener, gyroSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        if (gyroSensor != null) {
+            sensorManager.registerListener(gyroListener, gyroSensor, SensorManager.SENSOR_DELAY_NORMAL);
+
+        }
     }
 
     @Override
@@ -92,29 +127,55 @@ public class MainActivity extends AppCompatActivity {
         // Unregister the gyroscope sensor listener to conserve battery
         sensorManager.unregisterListener(gyroListener);
     }
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReference("Test");
-
         usbSerialInterface = new UsbSerialInterface();
+        messageLayout = findViewById(R.id.messageLayout);
 
         Orientation orientation = new Orientation(this);
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE); // Get the audio manager for mic control
+        audioManager.setMicrophoneMute(true); // Mute the microphone by default
+
+
+        ToggleButton changeUnitsButton = findViewById(R.id.changeUnits);
+
+        changeUnitsButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                isKphSelected = b;
+                updateUnitsText();
+            }
+        });
+
         ToggleButton Power = (ToggleButton) findViewById(R.id.Power);
-        TextView testText = (TextView)findViewById(R.id.testText);
+        TextView testText = (TextView)findViewById(R.id.speedText);
+        TextView alternateText = (TextView)findViewById(R.id.alternateText);
         Handler handler = new Handler();
         Runnable updateRunnable = new Runnable() {
             @Override
             public void run() {
-                if (speedSelect == false){
-                    testText.setText(speedText);//continuously update the speed value on screen
+                if (!speedSelect){
+                    if(isSRButtonPressed){
+                        testText.setText(String.valueOf(RPM));
+                        alternateText.setText(speedText);
+                    }
+                    else{
+                        testText.setText(speedText);
+                        alternateText.setText(String.valueOf(RPM));
+                    }
+
+                }
+                else{
+                    testText.setText(speedText);
+                    alternateText.setText(String.valueOf(RPM));
                 }
 
                 Log.d("Speed", speedText);
@@ -124,6 +185,13 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("GyroY", String.valueOf(Ya));
                 Log.d("GyroZ", String.valueOf(Za));
                 Log.d("Data", String.valueOf(data));
+                Log.d("LF", String.valueOf(LF));
+                Log.d("RF", String.valueOf(RF));
+                Log.d("LB", String.valueOf(LB));
+                Log.d("RB", String.valueOf(RB));
+                Log.d("Panic", String.valueOf(panic));
+                Log.d("PhoneBat", String.valueOf(phoneBat));
+
 
                 handler.postDelayed(this, 50); // Delay for 50 milliseconds
             }
@@ -141,7 +209,6 @@ public class MainActivity extends AppCompatActivity {
                             // You can update your global variables here if needed
                         }
                     });
-                    handler.post(updateRunnable);
 
                 }else{
                     orientation.stopListening();
@@ -150,22 +217,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Switch mySwitch = findViewById(R.id.TestSwitch);                                    //just a switch to test the firebase, will be removed
-        mySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                // Your code to handle the switch change goes here
-                if (isChecked) {
-                    // Switch is ON
-                    myRef.setValue("on");
-                } else {
-                    // Switch is OFF
-                    myRef.setValue("off");
-                }
-            }
-        });
-
-
         Handling handling = new Handling(125);//create instance of handling class and set sending delay to 50 miliseconds
         ToggleButton toggle = findViewById(R.id.Send);                              //button to select if data will be sent to firebase
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -173,14 +224,13 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){
                     handling.start();           //start sending in the set delay
+
+
                 }else{
                     handling.stop();            //stop sending data
                 }
             }
         });
-
-        TextView la = (TextView)findViewById(R.id.lat);
-        TextView lo = (TextView)findViewById(R.id.longe);
 
         ToggleButton toggle2 = findViewById(R.id.RPM);
         rpmGauge = findViewById(R.id.rpmGauge);
@@ -200,6 +250,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         // Thread to continuously update the RPM gauge
+
+        ToggleButton boardsel = findViewById(R.id.board);
+        boardsel.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(b){board = 9600;}
+                else{board = 115200;}
+            }
+        });
 
         ToggleButton toggle3 = findViewById(R.id.USB);
         toggle3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -237,7 +296,7 @@ public class MainActivity extends AppCompatActivity {
                                 throw new RuntimeException(e);
                             }
                             try {
-                                port.setParameters(9600, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
+                                port.setParameters(board, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);       //set baud to 9600 for arduino, 115200 for esp32
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
@@ -249,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
 
                             // Continuously read data
                             while (isReading) { // You need to set and manage the "isReading" boolean flag
-                                byte[] response = new byte[1024]; // Create a buffer to read the response
+                                byte[] response = new byte[1024]; // Create a buffer to read the response                   chack if this is issue for esp32
                                 int bytesRead = 0;
                                 int readAttempts = 0;
 
@@ -315,15 +374,13 @@ public class MainActivity extends AppCompatActivity {
             private volatile boolean isReading = false;
 
         });
-        ToggleButton toggle4 = findViewById(R.id.Fuel);
-        toggle4.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        ToggleButton speedRPM = findViewById(R.id.SR);
+        TextView Units = (TextView)findViewById(R.id.Units);
+        speedRPM.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b){
-                    //will need to have call to class for the fuel sending method woth parameter yes
-                }else{
-                    //send Fuel method will need to have parameter no
-                }
+                isSRButtonPressed = b;
+                updateUnitsText();
             }
         });
 
@@ -343,6 +400,52 @@ public class MainActivity extends AppCompatActivity {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                     1000, 0, locationListener);
         }
+
+        Button sendMessage = findViewById(R.id.Message);
+
+                                                                                        // Check if SMS permission is not granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Request SMS permission
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.SEND_SMS},
+                    SMS_PERMISSION_REQUEST_CODE);
+        } else {
+            sendMessage.setOnClickListener(new View.OnClickListener() {                 //sending sms message when button is pressed, will be changed to when panic is true
+                @Override
+                public void onClick(View view) {
+                    // Send the SMS message directly
+                    SMSSender.sendSMS();                               //call send sms class to send message
+                }
+            });
+        }
+
+        ToggleButton muteButton = findViewById(R.id.micMutetoggle);
+        muteButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                if (b) {
+                    audioManager.setMicrophoneMute(false); // UnMute the microphone
+                    mute = 1;
+                } else {
+                    audioManager.setMicrophoneMute(true); // mute the microphone
+                    mute = 0;
+                }
+            }
+        });
+
+
+    }
+    private void updateUnitsText() {
+        TextView unitsText = findViewById(R.id.Units);              //set the Unit value to MPH or KPH
+        if (isSRButtonPressed) {
+            unitsText.setText("RPM");
+        } else if (isKphSelected) {
+            unitsText.setText("KPH");
+        } else {
+            unitsText.setText("MPH");
+        }
     }
 
     private final LocationListener locationListener = new LocationListener() {
@@ -356,18 +459,30 @@ public class MainActivity extends AppCompatActivity {
             MainActivity.longitude = location.getLongitude();
             // Convert the speed to miles per hour
             float speedMph = speedMps * 2.23694f;
-            speedInt = Math.round(speedMph);            // assign the speed int value to the speed to send to firebase
+            float speedKph = speedMps * 3.6f;
+            MainActivity.speedInt = Math.round(speedMph);
+            if (isSRButtonPressed) {
 
-            Log.d("SpeedDebug", "Speed in MPH: " + speedMph);
-            // Format and display the speed in mph
-            if (speedMph == 0.0f) {
-                speedText = "0 MPH";
-
+                speedText = String.valueOf(RPM);
             } else {
-                // Format and display the speed in mph on phone screen
-                speedText = String.format("%.0f MPH", speedMph);
-
+                if (isKphSelected) {
+                    // Convert the speed to kilometers per hour
+                    speedText = String.format("%d", Math.round(speedKph));
+                    Log.d("SpeedDebug", "Speed in KPH: " + speedKph);
+                    Log.d("SpeedDebug", "SpeedText: " + speedText);
+                } else {
+                    // Convert the speed to miles per hour
+                    speedText = String.format("%d", Math.round(speedMph));
+                }
             }
+            Log.d("SpeedDebug", "Speed in MPH: " + speedMph);
+            Log.d("SpeedDebug", "Speed in KPH: " + speedMps * 3.6f);
+
+            // Format and display the speed in mph
+            if (speedMph == 0.0f && !isSRButtonPressed) {
+                  speedText = "0";
+            }
+
         }
         public String updateLoc(boolean bol){
             return speedText;
@@ -417,10 +532,14 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             rpmGauge.setCurrentRPM(RPM);
+                            // Continuously update the speed value on screen
 
-                            TextView testText = findViewById(R.id.testText);
-                            speedText = String.format("%d MPH", MainActivity.speedInt);
-                            testText.setText(speedText); // Continuously update the speed value on screen
+                            ProgressBar fuelBar = findViewById(R.id.FuelGuage);
+                            fuelBar.setProgress(fuel);
+                            ProgressBar battBar = findViewById(R.id.BatteryGuage);
+                            battBar.setProgress(battery);
+
+                            updateBatteryPercentage();
                         }
                     });
 
@@ -432,4 +551,37 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     });
+
+    public static void updateMessage(String newMessage) {
+        Log.d("UpdateMessage", "New Message: " + newMessage);
+
+        if (!newMessage.equals(message)) {
+            messageLayout.setVisibility(View.VISIBLE);
+            messageLayout.setText(newMessage);
+
+            // Set a delayed runnable to hide the layout after a specific duration (e.g., 5000 milliseconds)
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    messageLayout.setVisibility(View.INVISIBLE);
+                }
+            }, SCREEN_DISPLAY_DURATION); // Use the constant SCREEN_DISPLAY_DURATION or adjust the duration as needed
+
+            message = newMessage;
+            Log.d("Updated Message", newMessage);
+        }
+    }
+    // Method to update battery percentage
+    private void updateBatteryPercentage() {
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = registerReceiver(null, ifilter);
+
+        if (batteryStatus != null) {
+            level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            phoneBat = Math.round((level / (float) scale) * 100);
+        }
+    }
+
+
 }

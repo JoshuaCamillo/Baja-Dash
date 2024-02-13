@@ -8,6 +8,7 @@ public class UsbSort {
     public void processResponse(byte[] response, int len) {
         String data = new String(response, 0, len);
         Log.d("UsbSort", "Received data: " + data);
+        Log.d("Fuel", String.valueOf(MainActivity.fuel));
 
         // Split the data into an array of strings using the comma as a delimiter
         String[] values = data.split(",");
@@ -28,7 +29,25 @@ public class UsbSort {
                     MainActivity.RPM = Integer.parseInt(valueStr);
                 } else if (identifier.equals("Speed")) {
                     MainActivity.speedInt = Integer.parseInt(valueStr);
+                } else if (identifier.equals("Battery")) {
+                    MainActivity.battery = Integer.parseInt(valueStr);
+                } else if (identifier.equals("Fuel")) {
+                    MainActivity.fuel = Integer.parseInt(valueStr);
+                } else if (identifier.equals("LF")) {
+                    MainActivity.LF = Integer.parseInt(valueStr);
+                } else if (identifier.equals("RF")) {
+                    MainActivity.RF = Integer.parseInt(valueStr);
+                } else if (identifier.equals("LB")) {
+                    MainActivity.LB = Integer.parseInt(valueStr);
+                } else if (identifier.equals("RB")) {
+                    MainActivity.RB = Integer.parseInt(valueStr);
+                }else if (identifier.equals("panic")) {
+                    MainActivity.panic = Integer.parseInt(valueStr);
+                } else if (identifier.equals("mute")) {
+                    MainActivity.mute = Integer.parseInt(valueStr);
                 }
+
+
             }
         }
     }
