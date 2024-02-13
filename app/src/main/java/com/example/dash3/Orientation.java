@@ -6,6 +6,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import androidx.annotation.Nullable;
+
+import android.os.BatteryManager;
 import android.view.Surface;
 import android.view.WindowManager;
 public class Orientation implements SensorEventListener {
@@ -28,6 +30,7 @@ public class Orientation implements SensorEventListener {
     public Orientation(Activity activity) {
         mWindowManager = activity.getWindow().getWindowManager();
         mSensorManager = (SensorManager) activity.getSystemService(Activity.SENSOR_SERVICE);
+
 
         // Can be null if the sensor hardware is not available
         mRotationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -96,22 +99,35 @@ public class Orientation implements SensorEventListener {
                 break;
         }
 
-
-
-    float[] adjustedRotationMatrix = new float[9];
+        float[] adjustedRotationMatrix = new float[9];
         SensorManager.remapCoordinateSystem(rotationMatrix, worldAxisForDeviceAxisX,
-    worldAxisForDeviceAxisY, adjustedRotationMatrix);
+                worldAxisForDeviceAxisY, adjustedRotationMatrix);
 
-    float[] orientation = new float[3];
+        float[] orientation = new float[3];
         SensorManager.getOrientation(adjustedRotationMatrix, orientation);
 
-    float pitch = orientation[1] * -57; // Convert radians to degrees
-    float roll = orientation[2] * -57;
+        float pitch = orientation[1] * -57; // Convert radians to degrees
+        float roll = orientation[2] * -57;
 
-    MainActivity.Xpos = orientation[0]*-57;
-    MainActivity.Ypos = pitch;
-    MainActivity.Zpos = roll;
+        // Ensure the pitch is calculated based on the desired axis (e.g., SensorManager.AXIS_MINUS_Z)
+        pitch = adjustPitchForLandscape(pitch);
+
+        MainActivity.Xpos = orientation[0] * -57;
+        MainActivity.Ypos = pitch;
+        MainActivity.Zpos = roll;
 
         mListener.onOrientationChanged(pitch, roll);
     }
+
+    private float adjustPitchForLandscape(float pitch) {
+        // Adjust pitch based on landscape orientation
+        // You may need to customize this based on your specific requirements
+        if (pitch < 0) {
+            pitch += 90; // Adjust for landscape mode
+        } else {
+            pitch -= 90; // Adjust for landscape mode
+        }
+        return pitch;
+    }
+
 }
