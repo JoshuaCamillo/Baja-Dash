@@ -15,6 +15,7 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.AudioManager;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -86,6 +87,7 @@ public class MainActivity extends AppCompatActivity{
     public static int panic;
     public static int panicking;
     private static final int SMS_PERMISSION_REQUEST_CODE = 1;
+    public static int mute = 0;
 
     int level;
     int scale;
@@ -138,6 +140,10 @@ public class MainActivity extends AppCompatActivity{
         Orientation orientation = new Orientation(this);
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE); // Get the audio manager for mic control
+        audioManager.setMicrophoneMute(true); // Mute the microphone by default
+
 
         ToggleButton changeUnitsButton = findViewById(R.id.changeUnits);
 
@@ -409,12 +415,25 @@ public class MainActivity extends AppCompatActivity{
                 @Override
                 public void onClick(View view) {
                     // Send the SMS message directly
-                    String josh = "7058229216"; // Replace with the recipient's phone number
-                    String sendMessage = "Emergency"; // Replace with your message
                     SMSSender.sendSMS();                               //call send sms class to send message
                 }
             });
         }
+
+        ToggleButton muteButton = findViewById(R.id.micMutetoggle);
+        muteButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                if (b) {
+                    audioManager.setMicrophoneMute(false); // UnMute the microphone
+                    mute = 1;
+                } else {
+                    audioManager.setMicrophoneMute(true); // mute the microphone
+                    mute = 0;
+                }
+            }
+        });
 
 
     }

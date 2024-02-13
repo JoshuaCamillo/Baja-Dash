@@ -43,8 +43,9 @@ public class UsbSort {
                     MainActivity.RB = Integer.parseInt(valueStr);
                 }else if (identifier.equals("panic")) {
                     MainActivity.panic = Integer.parseInt(valueStr);
+                } else if (identifier.equals("mute")) {
+                    MainActivity.mute = Integer.parseInt(valueStr);
                 }
-
 
 
             }
