@@ -9,15 +9,14 @@
 
     <com.example.dash3.RPMGaugeView
         android:id="@+id/rpmGauge"
-        android:layout_width="match_parent"
-        android:layout_height="75dp"
+        android:layout_width="702dp"
+        android:layout_height="55dp"
         android:layout_centerInParent="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias= "0.031"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.051" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <LinearLayout
         android:id="@+id/linearLayout"
@@ -34,10 +33,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@drawable/toggle_button_selector"
-            android:checked="true"
+            android:checked="false"
             android:text="ToggleButton"
-            android:textOn="Sending"
-            android:textOff="Waiting" />
+            android:textOff="Waiting"
+            android:textOn="Sending" />
 
         <ToggleButton
             android:id="@+id/RPM"
@@ -45,10 +44,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@drawable/toggle_button_selector"
-            android:checked="true"
+            android:checked="false"
             android:text="ToggleButton"
-            android:textOff="RPM"
-            android:textOn="Share RPM" />
+            android:textOff="DATA OFF"
+            android:textOn="DATA ON" />
 
         <ToggleButton
             android:id="@+id/USB"
@@ -56,84 +55,179 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@drawable/toggle_button_selector"
+            android:checked="false"
             android:text="ToggleButton"
             android:textOff="USB OFF"
-            android:textOn="USB IN"  />
+            android:textOn="USB IN" />
 
         <ToggleButton
-            android:id="@+id/Fuel"
-            android:layout_width="wrap_content"
+            android:id="@+id/SR"
+            android:layout_width="21dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@drawable/toggle_button_selector"
             android:checked="false"
             android:text="ToggleButton"
-            android:textOff="Fuel OFF"
-            android:textOn="Fuel ON" />
+            android:textOff="SPEED"
+            android:textOn="RPM" />
+
+        <ToggleButton
+            android:id="@+id/changeUnits"
+            android:layout_width="21dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/toggle_button_selector"
+            android:checked="false"
+            android:text="ToggleButton"
+            android:textOff="MPH"
+            android:textOn="KPH" />
 
     </LinearLayout>
 
-    <Switch
-        android:id="@+id/TestSwitch"
-        android:layout_width="177dp"
-        android:layout_height="49dp"
-        android:text="Test Firebase"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.028"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.82" />
 
     <TextView
-        android:id="@+id/testText"
-        android:layout_width="546dp"
-        android:layout_height="175dp"
+        android:id="@+id/speedText"
+        android:layout_width="318dp"
+        android:layout_height="334dp"
+        android:autoSizeMaxTextSize="1250sp"
+        android:autoSizeMinTextSize="90sp"
+        android:autoSizeTextType="uniform"
         android:gravity="center"
-        android:text="TextView"
+        android:text="--"
         android:textColor="#FFFFFF"
-        android:textSize="120dp"
         android:textStyle="bold|italic"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintHorizontal_bias="0.569"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.474" />
+        app:layout_constraintVertical_bias="0.493" />
 
     <ToggleButton
         android:id="@+id/Power"
-        android:layout_width="17dp"
-        android:layout_height="15dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:layout_marginEnd="4dp"
         android:layout_marginBottom="56dp"
         android:background="@drawable/toggle_button_selector"
         android:text="ToggleButton"
-        android:textSize="4dp"
+        android:textSize="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <TextView
-        android:id="@+id/longe"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="TextView"
+    <ToggleButton
+        android:id="@+id/board"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="56dp"
+        android:background="@drawable/toggle_button_selector"
+        android:text="BoardSelect"
+        android:textSize="10dp"
+        android:textOff="ESP"
+        android:textOn="UNO"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/Power" />
+
+    <ProgressBar
+        android:id="@+id/FuelGuage"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="175dp"
+        android:layout_height="60dp"
+        android:layout_gravity="center"
+        android:layout_marginEnd="430dp"
+        android:max="100"
+        android:progress="0"
+        android:progressDrawable="@drawable/fuelguage"
+        android:rotation="270"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.375" />
+        app:layout_constraintVertical_bias="0.498" />
+
+    <ProgressBar
+        android:id="@+id/BatteryGuage"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="175dp"
+        android:layout_height="60dp"
+        android:layout_gravity="center"
+        android:layout_marginEnd="510dp"
+        android:max="100"
+        android:progress="0"
+        android:progressDrawable="@drawable/batteryguage"
+        android:rotation="270"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.497" />
 
     <TextView
-        android:id="@+id/lat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="TextView"
+        android:id="@+id/Units"
+        android:layout_width="121dp"
+        android:layout_height="71dp"
+        android:text="MPH"
+        android:textSize="50dp"
+        android:textStyle="bold|italic"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.991"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.433" />
+        app:layout_constraintVertical_bias="0.544" />
+
+    <TextView
+        android:id="@+id/alternateText"
+        android:layout_width="142dp"
+        android:layout_height="54dp"
+        android:layout_marginEnd="476dp"
+        android:autoSizeTextType="uniform"
+        android:text="--"
+        android:textStyle="bold|italic"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.008"
+        />
+
+    <TextView
+        android:id="@+id/messageLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:autoSizeTextType="uniform"
+        android:background="#FF0000"
+        android:gravity="center"
+        android:text="Message"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:visibility="invisible"
+        tools:layout_editor_absoluteX="152dp"
+        tools:layout_editor_absoluteY="-151dp"
+        tools:visibility="gone" />
+
+    <Button
+        android:id="@+id/Message"
+        android:layout_width="81dp"
+        android:layout_height="53dp"
+        android:layout_marginEnd="96dp"
+        android:layout_marginBottom="20dp"
+        android:text="Send"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ToggleButton
+        android:id="@+id/micMutetoggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="Speak"
+        android:textOff="muted"
+        android:textOn="unmuted"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/Message"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.763" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

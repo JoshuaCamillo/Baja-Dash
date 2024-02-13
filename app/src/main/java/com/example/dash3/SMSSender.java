@@ -22,12 +22,21 @@ public class SMSSender {
             Log.e(TAG, "Failed to send SMS to " + josh);
         }
         //try {                                                                 //uncomment this if you want to send to two numbers
+<<<<<<< HEAD
         //  SmsManager smsManager = SmsManager.getDefault();
         //smsManager.sendTextMessage(ethan, null, message, null, null);
         //Log.d(TAG, "SMS sent successfully to " + ethan);
         //} catch (Exception e) {
         //  e.printStackTrace();
         //Log.e(TAG, "Failed to send SMS to " + ethan);
+=======
+          //  SmsManager smsManager = SmsManager.getDefault();
+            //smsManager.sendTextMessage(ethan, null, message, null, null);
+            //Log.d(TAG, "SMS sent successfully to " + ethan);
+        //} catch (Exception e) {
+          //  e.printStackTrace();
+            //Log.e(TAG, "Failed to send SMS to " + ethan);
+>>>>>>> origin/master
         //}
         //try {                                                                 //uncomment this if you want to send to two numbers
         //  SmsManager smsManager = SmsManager.getDefault();

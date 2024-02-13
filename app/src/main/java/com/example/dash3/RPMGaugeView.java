@@ -56,10 +56,19 @@ public class RPMGaugeView extends View{
         backgroundPaint.setStyle(Paint.Style.FILL);
 
         Paint rpmPaint = new Paint();
-        if(currentRPM<2500){
+        if(currentRPM<1300){
+            rpmPaint.setColor(Color.YELLOW);
+            rpmPaint.setStyle(Paint.Style.FILL);
+        }else if (currentRPM<1600) {
             rpmPaint.setColor(Color.GREEN);
             rpmPaint.setStyle(Paint.Style.FILL);
-        } else if (currentRPM<3500) {
+        }else if (currentRPM<3000) {
+            rpmPaint.setColor(Color.YELLOW);
+            rpmPaint.setStyle(Paint.Style.FILL);
+        }else if (currentRPM<3250) {
+            rpmPaint.setColor(Color.GREEN);
+            rpmPaint.setStyle(Paint.Style.FILL);
+        }else if (currentRPM<3400) {
             rpmPaint.setColor(Color.YELLOW);
             rpmPaint.setStyle(Paint.Style.FILL);
         }else{
