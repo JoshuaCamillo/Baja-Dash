@@ -27,6 +27,7 @@ public class Speedometer implements Runnable, LocationListener {
         float speedMph = speedMps * 2.23694f;
         float speedKph = speedMps * 3.6f;
         MainActivity.speedInt = Math.round(speedMph);
+        MainActivity.speedKPH = Math.round(speedKph);
 
         Log.d("SpeedDebug", "Speed in MPH: " + speedMph);
         Log.d("SpeedDebug", "Speed in KPH: " + speedMps * 3.6f);
@@ -35,7 +36,10 @@ public class Speedometer implements Runnable, LocationListener {
         if (speedMph == 0.0f) {
             MainActivity.speedText = "0";
         } else {
-            MainActivity.speedText = String.format("%.0f", speedMph);
+            if(MainActivity.isKphSelected)
+                MainActivity.speedText = String.format("%.0f", speedKph);
+            else
+                MainActivity.speedText = String.format("%.0f", speedMph);
         }
 
         //MainActivity.updateUI();
@@ -67,8 +71,8 @@ public class Speedometer implements Runnable, LocationListener {
         // Check if location permission is granted before requesting updates
         if (context.checkSelfPermission(
                 android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    1000, 0, this);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,                                                    //change first value for time between reading
+                    50, 0, this);
         } else {
             Toast.makeText(context, "Location permission denied. Speedometer will not work.",
                     Toast.LENGTH_SHORT).show();

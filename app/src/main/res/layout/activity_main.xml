@@ -39,7 +39,7 @@
             android:textOn="Sending" />
 
         <ToggleButton
-            android:id="@+id/RPM"
+            android:id="@+id/DataButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -114,20 +114,6 @@
         android:textSize="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
-
-    <ToggleButton
-        android:id="@+id/board"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="56dp"
-        android:background="@drawable/toggle_button_selector"
-        android:text="BoardSelect"
-        android:textSize="10dp"
-        android:textOff="ESP"
-        android:textOn="UNO"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/Power" />
 
     <ProgressBar
         android:id="@+id/FuelGuage"
