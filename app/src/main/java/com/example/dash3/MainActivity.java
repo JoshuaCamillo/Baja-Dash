@@ -52,6 +52,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity{
 
     private  Gyroscope gyroListener;                    //start putting class calls here
+    private PhoneBattery batteryUpdater;
 
 
     public static final long SCREEN_DISPLAY_DURATION = 120000;
@@ -127,6 +128,8 @@ public class MainActivity extends AppCompatActivity{
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         gyroListener = new Gyroscope();
+
+        batteryUpdater = new PhoneBattery(this);
 
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE); // Get the audio manager for mic control
         audioManager.setMicrophoneMute(true); // Mute the microphone by default
@@ -211,10 +214,11 @@ public class MainActivity extends AppCompatActivity{
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){
                     handling.start();           //start sending in the set delay
-
+                    batteryUpdater.start();
 
                 }else{
                     handling.stop();            //stop sending data
+                    batteryUpdater.stop();
                 }
             }
         });
@@ -525,8 +529,6 @@ public class MainActivity extends AppCompatActivity{
                             fuelBar.setProgress(fuel);
                             ProgressBar battBar = findViewById(R.id.BatteryGuage);
                             battBar.setProgress(battery);
-
-                            updateBatteryPercentage();
                         }
                     });
 
@@ -558,17 +560,4 @@ public class MainActivity extends AppCompatActivity{
             Log.d("Updated Message", newMessage);
         }
     }
-    // Method to update battery percentage
-    private void updateBatteryPercentage() {
-        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = registerReceiver(null, ifilter);
-
-        if (batteryStatus != null) {
-            level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            phoneBat = Math.round((level / (float) scale) * 100);
-        }
-    }
-
-
 }
