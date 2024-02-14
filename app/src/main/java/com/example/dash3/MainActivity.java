@@ -126,6 +126,7 @@ public class MainActivity extends AppCompatActivity{
         Orientation orientation = new Orientation(this);
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        gyroListener = new Gyroscope();
 
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE); // Get the audio manager for mic control
         audioManager.setMicrophoneMute(true); // Mute the microphone by default
