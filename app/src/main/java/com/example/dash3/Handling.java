@@ -51,6 +51,7 @@ public class Handling {
     private int panicking = MainActivity.panicking;
     private int phoneBat = MainActivity.phoneBat;
     private int oldphoneBat = -1;
+    private boolean firstRun  = true;
 
     // Set this duration according to your requirements
     private static final long PANIC_DURATION = 60000; // 60000 milliseconds (60 seconds)
@@ -93,8 +94,13 @@ public class Handling {
                 String newMessage = dataSnapshot.getValue(String.class);
                 if (newMessage != null && !newMessage.equals(oldMessage)) {
                     // Update the message variable in MainActivity or perform other actions
-                    MainActivity.updateMessage(newMessage);
-                    oldMessage = newMessage;
+                    if(firstRun ==true){
+                        oldMessage = newMessage;
+                        firstRun = false;
+                    }else {
+                        MainActivity.updateMessage(newMessage);
+                        oldMessage = newMessage;
+                    }
 
                     Log.d("Firebase", "New Message: " + newMessage);
                 }
