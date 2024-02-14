@@ -37,6 +37,7 @@ public class Speedometer implements Runnable, LocationListener {
         } else {
             MainActivity.speedText = String.format("%.0f", speedMph);
         }
+
         //MainActivity.updateUI();
 
     }
