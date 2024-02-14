@@ -50,6 +50,10 @@ import java.io.IOException;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity{
+
+    private  Gyroscope gyroListener;                    //start putting class calls here
+
+
     public static final long SCREEN_DISPLAY_DURATION = 120000;
     public static int LB;
     public static  int RB;
@@ -93,25 +97,7 @@ public class MainActivity extends AppCompatActivity{
     int scale;
     public static int phoneBat;      //battery percentage
 
-    private final SensorEventListener gyroListener = new SensorEventListener() {
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        }
 
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            float x = event.values[0];
-            float y = event.values[1];
-            float z = event.values[2];
-
-            // Update global variables
-            Xa = x;
-            Ya = y;
-            Za = z;
-
-
-        }
-    };
     protected void onResume() {
         super.onResume();
         // Register the gyroscope sensor listener
@@ -131,11 +117,11 @@ public class MainActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        setContentView(R.layout.activity_main);     //set the layout to activity_main
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);       //keeps the screen from turning off
 
-        usbSerialInterface = new UsbSerialInterface();
-        messageLayout = findViewById(R.id.messageLayout);
+        usbSerialInterface = new UsbSerialInterface();                      //create instance of usbserialinterface class
+        messageLayout = findViewById(R.id.messageLayout);                   //sets the layout for displaying messages to driver
 
         Orientation orientation = new Orientation(this);
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
