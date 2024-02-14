@@ -52,59 +52,49 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity{
 
     private  Gyroscope gyroListener;                    //start putting class calls here
-    private PhoneBattery batteryUpdater;
-    private Speedometer speedUpdater;
+    private PhoneBattery batteryUpdater;                //create instance of phonebattery class
+    private Speedometer speedUpdater;                   //create instance of speedometer class
+    private USBRead usbRead;                            //create instance of usbread class
+    private SpeedoUpdate speedoUpdate;
 
-    public static final long SCREEN_DISPLAY_DURATION = 120000;
-    public static int LB;
-    public static  int RB;
-    public static int LF;
-    public static  int RF;
-
-    public static int board = 115200;
+    public static final long SCREEN_DISPLAY_DURATION = 120000;      //change to durarion of message to driver on screen
+    public static int LB, RB, LF, RF;                   //create variables for lpots
 
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     private LocationManager locationManager;
     private UsbSerialInterface usbSerialInterface; // Instantiating the UsbSerialInterface class
     private SensorManager sensorManager;
-    private boolean isSRButtonPressed = false;
-    private boolean isKphSelected = false;
+    public static boolean isSRButtonPressed = false;
+    public static boolean isKphSelected = false;
 
     private static TextView messageLayout;
-
-    private Orientation orientation;
     private Sensor gyroSensor;
-    private TextView textX, textY, textZ;
-    public static double latitude;
-    public static double longitude;
+
+    public static double latitude, longitude;           //create variables for latitude and longitude
+
     public static int RPM = 0;
     public static String speedText ="";
     public static int speedInt = 0;
+    public static int speedKPH = 0;
     public static int fuel;
     public static int battery;
     public static float Xa, Ya, Za = 0.0f;
     public static float Xpos, Ypos, Zpos = 0.0f;
     private RPMGaugeView rpmGauge;
-    private boolean speedSelect = false;
+    public static boolean speedSelect = false;
     public static String message = "Starting";
-    public static String oldMessage = "Starting";
     public static volatile String data;
     public static int panic;
     public static int panicking;
     private static final int SMS_PERMISSION_REQUEST_CODE = 1;
     public static int mute = 0;
-
-    int level;
-    int scale;
     public static int phoneBat;      //battery percentage
 
-
     protected void onResume() {
-        super.onResume();
+        super.onResume();                             //when app is open, the gyroscopic accelerations are measured
         // Register the gyroscope sensor listener
         if (gyroSensor != null) {
             sensorManager.registerListener(gyroListener, gyroSensor, SensorManager.SENSOR_DELAY_NORMAL);
-
         }
     }
 
@@ -124,22 +114,29 @@ public class MainActivity extends AppCompatActivity{
         usbSerialInterface = new UsbSerialInterface();                      //create instance of usbserialinterface class
         messageLayout = findViewById(R.id.messageLayout);                   //sets the layout for displaying messages to driver
 
-        Orientation orientation = new Orientation(this);
+        Orientation orientation = new Orientation(this);            // initialize the orientation class for pitch, roll, yaw values
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);     //initialize gyro sensor for gyroscopic accelerations
         gyroListener = new Gyroscope();
 
-        batteryUpdater = new PhoneBattery(this);
-        speedUpdater = new Speedometer(this);
+        batteryUpdater = new PhoneBattery(this);                        //initialize class to get phone battery
+        speedUpdater = new Speedometer(this);                           //initialize class to get speed and location
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE); // Get the audio manager for mic control
         audioManager.setMicrophoneMute(true); // Mute the microphone by default
 
+        usbRead = new USBRead(this);                    //initialize class to read from usb
+        IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_ATTACHED);      //filter for usb device attached
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+
+        TextView testText = (TextView)findViewById(R.id.speedText);
+        TextView alternateText = (TextView)findViewById(R.id.alternateText);
+        speedoUpdate = new SpeedoUpdate(testText, alternateText);
+
 
         ToggleButton changeUnitsButton = findViewById(R.id.changeUnits);
-
         changeUnitsButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -148,67 +145,8 @@ public class MainActivity extends AppCompatActivity{
             }
         });
 
-        ToggleButton Power = (ToggleButton) findViewById(R.id.Power);
-        TextView testText = (TextView)findViewById(R.id.speedText);
-        TextView alternateText = (TextView)findViewById(R.id.alternateText);
-        Handler handler = new Handler();
-        Runnable updateRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (!speedSelect){
-                    if(isSRButtonPressed){
-                        testText.setText(String.valueOf(RPM));
-                        alternateText.setText(speedText);
-                    }
-                    else{
-                        testText.setText(speedText);
-                        alternateText.setText(String.valueOf(RPM));
-                    }
+        ToggleButton Power = (ToggleButton) findViewById(R.id.Power);                   //remove this button
 
-                }
-                else{
-                    testText.setText(speedText);
-                    alternateText.setText(String.valueOf(RPM));
-                }
-
-                Log.d("Speed", speedText);
-                Log.d("Lat", String.valueOf(latitude));
-                Log.d("Long", String.valueOf(longitude));
-                Log.d("GyroX", String.valueOf(Xa));
-                Log.d("GyroY", String.valueOf(Ya));
-                Log.d("GyroZ", String.valueOf(Za));
-                Log.d("Data", String.valueOf(data));
-                Log.d("LF", String.valueOf(LF));
-                Log.d("RF", String.valueOf(RF));
-                Log.d("LB", String.valueOf(LB));
-                Log.d("RB", String.valueOf(RB));
-                Log.d("Panic", String.valueOf(panic));
-                Log.d("PhoneBat", String.valueOf(phoneBat));
-
-
-                handler.postDelayed(this, 50); // Delay for 50 milliseconds
-            }
-        };
-        Power.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {         //check if power button is pressed
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b){
-                    handler.post(updateRunnable);           //tells handler to continuously update speed on screen
-                    orientation.startListening(new Orientation.OrientationListener(){
-
-                        public void onOrientationChanged(float pitch, float roll) {
-                            // Handle the continuous orientation updates here
-                            Log.d("Orientation", "Pitch: " + pitch + ", Roll: " + roll);
-                            // You can update your global variables here if needed
-                        }
-                    });
-
-                }else{
-                    orientation.stopListening();
-                    handler.removeCallbacks(updateRunnable);        //tells handler to stop updating speed on screen
-                }
-            }
-        });
 
         Handling handling = new Handling(125);//create instance of handling class and set sending delay to 50 miliseconds
         ToggleButton toggle = findViewById(R.id.Send);                              //button to select if data will be sent to firebase
@@ -226,150 +164,45 @@ public class MainActivity extends AppCompatActivity{
             }
         });
 
-        ToggleButton toggle2 = findViewById(R.id.RPM);
+        ToggleButton toggle2 = findViewById(R.id.DataButton);
         rpmGauge = findViewById(R.id.rpmGauge);
         toggle2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if (b) {
+                    if (!updateRPMThread.isAlive()) {
+                        // Start the thread to continuously update RPM gauge
+                        updateRPMThread.start();
+                    }
                     // Start the thread to continuously update RPM gauge
-                    updateRPMThread.start();
                     speedSelect = true;
                     speedUpdater.run();
+                    usbRead.startCommunication();
+                    speedoUpdate.startUpdates();
+                    orientation.startListening(new Orientation.OrientationListener(){
+
+                        public void onOrientationChanged(float pitch, float roll) {
+                            // Handle the continuous orientation updates here
+                            Log.d("Orientation", "Pitch: " + pitch + ", Roll: " + roll);
+                            // You can update your global variables here if needed
+                        }
+                    });
 
                 } else {
                     // Stop the thread when the toggle button is unchecked
-                    updateRPMThread.interrupt();
+                    if (updateRPMThread.isAlive()) {
+                        updateRPMThread.interrupt();
+                    }                                              //still needs to have functionality put in class
                     speedSelect = false;
-                    speedUpdater.stop();
+                    speedUpdater.stop();                    //stop getting gps speed and location
+                    usbRead.stopCommunication();            //stop reading from usb
+                    orientation.stopListening();            //stop getting orientation
+                    speedoUpdate.stopUpdates();
                 }
             }
         });
         // Thread to continuously update the RPM gauge
 
-        ToggleButton boardsel = findViewById(R.id.board);
-        boardsel.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b){board = 9600;}
-                else{board = 115200;}
-            }
-        });
-
-        ToggleButton toggle3 = findViewById(R.id.USB);
-        toggle3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {
-
-                    isReading = true; // Start the continuous reading
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            UsbSerialPort port = null;
-                            UsbDeviceConnection connection = null;
-
-                            // Find all available drivers from attached devices.
-                            UsbSort usbsort = new UsbSort();
-                            UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
-                            List<UsbSerialDriver> availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(manager);
-                            if (availableDrivers.isEmpty()) {
-                                return;
-                            }
-
-                            // Open a connection to the first available driver.
-                            UsbSerialDriver driver = availableDrivers.get(0);
-                            connection = manager.openDevice(driver.getDevice());
-                            if (connection == null) {
-                                // add UsbManager.requestPermission(driver.getDevice(), ..) handling here
-                                return;
-                            }
-
-                            port = driver.getPorts().get(0);
-                            try {
-                                port.open(connection);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                port.setParameters(board, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);       //set baud to 9600 for arduino, 115200 for esp32
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-
-                            final int MAX_READ_ATTEMPTS = 10;
-                            final int READ_WAIT_MILLIS = 1000; // Define your read timeout
-
-                            StringBuilder partialData = new StringBuilder();
-
-                            // Continuously read data
-                            while (isReading) { // You need to set and manage the "isReading" boolean flag
-                                byte[] response = new byte[1024]; // Create a buffer to read the response                   chack if this is issue for esp32
-                                int bytesRead = 0;
-                                int readAttempts = 0;
-
-                                // Repeat the read attempts until data is received or the maximum attempts are reached
-                                while (bytesRead == 0 && readAttempts < MAX_READ_ATTEMPTS) {
-                                    try {
-                                        bytesRead = port.read(response, READ_WAIT_MILLIS);
-                                    } catch (IOException e) {
-                                        e.printStackTrace(); // Handle or log the exception
-                                    }
-                                    readAttempts++;
-                                }
-
-                                // Convert the read bytes into a String
-                                synchronized (MainActivity.class) {
-                                    String receivedData = new String(response, 0, bytesRead);
-                                    Log.d("syncdata", "Received data: " + receivedData);
-
-                                    // Handle split data
-                                    String fullData = partialData + receivedData;
-                                    String[] dataParts = fullData.split(",");
-
-                                    if (dataParts.length > 1) {
-                                        partialData = new StringBuilder(dataParts[dataParts.length - 1]);
-                                        for (int i = 0; i < dataParts.length - 1; i++) {
-                                            byte[] processedData = dataParts[i].getBytes();  // Convert each part back to byte[]
-                                            int len = processedData.length;
-                                            usbsort.processResponse(processedData, len);
-                                        }
-                                    } else {
-                                        partialData = new StringBuilder(fullData);
-                                    }
-                                }
-
-                                // Add a delay before the next read attempt if needed
-                                try {
-                                    Thread.sleep(10); // Adjust the sleep duration as needed
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-                            // Close USB communication
-                            if (port != null) {
-                                try {
-                                    port.close(); // Close the port
-                                } catch (IOException e) {
-                                    e.printStackTrace(); // Handle or log the exception
-                                }
-                            }
-                            if (connection != null) {
-                                connection.close(); // Close the connection
-                            }
-                        }
-                    }).start();
-                } else {
-                    // Handle the case when the toggle button is unchecked
-                    isReading = false; // Stop the continuous reading
-                }
-            }
-
-            // Declare a boolean flag to control the continuous reading
-            private volatile boolean isReading = false;
-
-        });
         ToggleButton speedRPM = findViewById(R.id.SR);
         TextView Units = (TextView)findViewById(R.id.Units);
         speedRPM.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -475,4 +308,5 @@ public class MainActivity extends AppCompatActivity{
             Log.d("Updated Message", newMessage);
         }
     }
+
 }
