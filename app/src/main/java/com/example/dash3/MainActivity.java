@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity{
 
     private  Gyroscope gyroListener;                    //start putting class calls here
     private PhoneBattery batteryUpdater;
-
+    private Speedometer speedUpdater;
 
     public static final long SCREEN_DISPLAY_DURATION = 120000;
     public static int LB;
@@ -130,6 +130,9 @@ public class MainActivity extends AppCompatActivity{
         gyroListener = new Gyroscope();
 
         batteryUpdater = new PhoneBattery(this);
+        speedUpdater = new Speedometer(this);
+
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE); // Get the audio manager for mic control
         audioManager.setMicrophoneMute(true); // Mute the microphone by default
@@ -232,11 +235,13 @@ public class MainActivity extends AppCompatActivity{
                     // Start the thread to continuously update RPM gauge
                     updateRPMThread.start();
                     speedSelect = true;
+                    speedUpdater.run();
 
                 } else {
                     // Stop the thread when the toggle button is unchecked
                     updateRPMThread.interrupt();
                     speedSelect = false;
+                    speedUpdater.stop();
                 }
             }
         });
@@ -375,23 +380,6 @@ public class MainActivity extends AppCompatActivity{
             }
         });
 
-
-
-        // Check and request location permission
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    REQUEST_LOCATION_PERMISSION);
-        }
-
-        // Initialize location manager
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        if (locationManager != null) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    1000, 0, locationListener);
-        }
-
         Button sendMessage = findViewById(R.id.Message);
 
                                                                                         // Check if SMS permission is not granted
@@ -439,79 +427,6 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-    private final LocationListener locationListener = new LocationListener() {
-
-        @Override
-
-        public void onLocationChanged(@NonNull Location location) {
-            // Get the speed from the location object in meters per second
-            float speedMps = location.getSpeed();
-            MainActivity.latitude = location.getLatitude();
-            MainActivity.longitude = location.getLongitude();
-            // Convert the speed to miles per hour
-            float speedMph = speedMps * 2.23694f;
-            float speedKph = speedMps * 3.6f;
-            MainActivity.speedInt = Math.round(speedMph);
-            if (isSRButtonPressed) {
-
-                speedText = String.valueOf(RPM);
-            } else {
-                if (isKphSelected) {
-                    // Convert the speed to kilometers per hour
-                    speedText = String.format("%d", Math.round(speedKph));
-                    Log.d("SpeedDebug", "Speed in KPH: " + speedKph);
-                    Log.d("SpeedDebug", "SpeedText: " + speedText);
-                } else {
-                    // Convert the speed to miles per hour
-                    speedText = String.format("%d", Math.round(speedMph));
-                }
-            }
-            Log.d("SpeedDebug", "Speed in MPH: " + speedMph);
-            Log.d("SpeedDebug", "Speed in KPH: " + speedMps * 3.6f);
-
-            // Format and display the speed in mph
-            if (speedMph == 0.0f && !isSRButtonPressed) {
-                  speedText = "0";
-            }
-
-        }
-        public String updateLoc(boolean bol){
-            return speedText;
-        }
-
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-        }
-
-        @Override
-        public void onProviderEnabled(@NonNull String provider) {
-        }
-
-        @Override
-        public void onProviderDisabled(@NonNull String provider) {
-            Toast.makeText(MainActivity.this, "GPS is disabled.", Toast.LENGTH_SHORT).show();
-
-        }
-    };
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_LOCATION_PERMISSION) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, start listening for location updates
-                if (ActivityCompat.checkSelfPermission(this,
-                        Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                            100000, 0, locationListener);
-                }
-            } else {
-                Toast.makeText(this, "Location permission denied. Speedometer will not work.",
-                        Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
     // Thread to continuously update the RPM gauge and speed text
     private Thread updateRPMThread = new Thread(new Runnable() {
         @Override
