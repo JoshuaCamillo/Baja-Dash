@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+//class to determine speed of vehicle and long and lat location
 public class Speedometer implements Runnable, LocationListener {
     private Context context;
 

@@ -6,6 +6,7 @@ import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.util.Log;
 
+//class to determine phones battery for website
 public class PhoneBattery implements Runnable {
     private Context context;
     private boolean isRunning;

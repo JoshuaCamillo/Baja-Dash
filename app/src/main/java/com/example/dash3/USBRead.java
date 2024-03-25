@@ -16,13 +16,11 @@ import java.io.IOException;
 import java.util.List;
 public class USBRead {
     private Context context;
-    private UsbSerialPort port;
-    private UsbDeviceConnection connection;
     private volatile boolean isReading = false;
-
     public USBRead(Context context) {
         this.context = context;
     }
+    String toESP = "";
 
     public void startCommunication() {
         isReading = true;
@@ -103,11 +101,11 @@ public class USBRead {
                     }
 
                     // Add a delay before the next read attempt if needed
-                    try {
-                        Thread.sleep(10); // Adjust the sleep duration as needed
+                    /*try {
+                        Thread.sleep(1); // this sleep determines how often the data is read
                     } catch (InterruptedException e) {
                         e.printStackTrace();
-                    }
+                    }*/
                 }
 
                 // Close USB communication
