@@ -4,11 +4,14 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.TextView;
 
+//class to take care of displaying speed and RPM on the UI as numbers (not the bar)
 public class SpeedoUpdate {
     private Handler handler;
     private TextView testText;
     private TextView alternateText;
-    private String speedText;
+    private int remainingTime;
+    private String timedisp;
+    private int hours, minutes, seconds;
 
     public SpeedoUpdate(TextView testText, TextView alternateText) {
         this.testText = testText;
@@ -28,13 +31,28 @@ public class SpeedoUpdate {
         @Override
         public void run() {
             // Update the UI with speed and RPM values
+            remainingTime = (int)(MainActivity.decreasingTime);
+
+            hours = remainingTime / 3600000;
+            minutes = (remainingTime % 3600000) / 60000;
+            seconds = (remainingTime % 60000) / 1000;
+
+            timedisp = String.format("%01d:%02d:%02d", hours, minutes, seconds);
 
             if (MainActivity.isSRButtonPressed) {
                testText.setText(String.valueOf(MainActivity.RPM));
-               alternateText.setText(MainActivity.speedText);
+               if(!MainActivity.enduro) {
+                   alternateText.setText(MainActivity.speedText);
+               }else{
+                   alternateText.setText(timedisp);
+               }
             } else {
-                testText.setText(MainActivity.speedText);
-                alternateText.setText(String.valueOf(MainActivity.RPM));
+                testText.setText(String.valueOf(MainActivity.mute));
+                if(!MainActivity.enduro) {
+                    alternateText.setText(String.valueOf(MainActivity.RPM));
+                }else{
+                    alternateText.setText(timedisp);
+                }
             }
 
 
@@ -55,8 +73,8 @@ public class SpeedoUpdate {
             Log.d("KPHselect", String.valueOf(MainActivity.isKphSelected));
             Log.d("SRButton", String.valueOf(MainActivity.isSRButtonPressed));
 
-            // Repeat the update after 50 milliseconds
-            handler.postDelayed(this, 25);
+
+            handler.postDelayed(this, 25);                      //change refresh rate of speedo display
         }
     };
 }

@@ -7,6 +7,20 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/lapDifference"
+        android:layout_width="88dp"
+        android:layout_height="36dp"
+        android:text=""
+        android:textSize="30dp"
+        android:textStyle="bold|italic"
+        app:layout_constraintBottom_toTopOf="@+id/lastLap"
+        app:layout_constraintEnd_toEndOf="@+id/lastLap"
+        app:layout_constraintHorizontal_bias="0.986"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
+
     <com.example.dash3.RPMGaugeView
         android:id="@+id/rpmGauge"
         android:layout_width="702dp"
@@ -50,15 +64,15 @@
             android:textOn="DATA ON" />
 
         <ToggleButton
-            android:id="@+id/USB"
+            android:id="@+id/ModeSelect"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@drawable/toggle_button_selector"
             android:checked="false"
             android:text="ToggleButton"
-            android:textOff="USB OFF"
-            android:textOn="USB IN" />
+            android:textOff="Enduro OFF"
+            android:textOn="ENDURO ON" />
 
         <ToggleButton
             android:id="@+id/SR"
@@ -103,18 +117,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.493" />
 
-    <ToggleButton
-        android:id="@+id/Power"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:layout_marginEnd="4dp"
-        android:layout_marginBottom="56dp"
-        android:background="@drawable/toggle_button_selector"
-        android:text="ToggleButton"
-        android:textSize="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
     <ProgressBar
         android:id="@+id/FuelGuage"
         style="?android:attr/progressBarStyleHorizontal"
@@ -149,17 +151,31 @@
 
     <TextView
         android:id="@+id/Units"
-        android:layout_width="121dp"
+        android:layout_width="152dp"
         android:layout_height="71dp"
         android:text="MPH"
         android:textSize="50dp"
         android:textStyle="bold|italic"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.991"
+        app:layout_constraintHorizontal_bias="0.975"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.544" />
+        app:layout_constraintVertical_bias="0.691" />
+
+    <TextView
+        android:id="@+id/lastLap"
+        android:layout_width="110dp"
+        android:layout_height="37dp"
+        android:text=""
+        android:textSize="35dp"
+        android:textStyle="bold|italic"
+        app:layout_constraintBottom_toTopOf="@+id/Units"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.974"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 
     <TextView
         android:id="@+id/alternateText"
@@ -168,12 +184,12 @@
         android:layout_marginEnd="476dp"
         android:autoSizeTextType="uniform"
         android:text="--"
+        android:textColor="@color/black"
         android:textStyle="bold|italic"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.008"
-        />
+        app:layout_constraintVertical_bias="0.008" />
 
     <TextView
         android:id="@+id/messageLayout"
@@ -195,8 +211,8 @@
         android:id="@+id/Message"
         android:layout_width="81dp"
         android:layout_height="53dp"
-        android:layout_marginEnd="96dp"
-        android:layout_marginBottom="20dp"
+        android:layout_marginEnd="180dp"
+        android:layout_marginBottom="8dp"
         android:text="Send"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -205,7 +221,7 @@
         android:id="@+id/micMutetoggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="24dp"
         android:text="Speak"
         android:textOff="muted"
         android:textOn="unmuted"
@@ -213,7 +229,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/Message"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.763" />
+        app:layout_constraintVertical_bias="0.82" />
+
+    <Button
+        android:id="@+id/testTimer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="276dp"
+        android:layout_marginEnd="388dp"
+        android:text="timer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

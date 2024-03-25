@@ -12,6 +12,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+//class to handle all the data being sent to the firebase database
 public class Handling {
     private double latitude = MainActivity.latitude;
     private double oldlatitude =-1;
@@ -49,12 +50,20 @@ public class Handling {
     private int panic = MainActivity.panic;
     private int oldpanic = 0;
     private int panicking = MainActivity.panicking;
+    private int oldpanicking = 0;
     private int phoneBat = MainActivity.phoneBat;
     private int oldphoneBat = -1;
     private boolean firstRun  = true;
+    public static int raceTime;
+    private int oldremaining = -1;
 
     // Set this duration according to your requirements
-    private static final long PANIC_DURATION = 60000; // 60000 milliseconds (60 seconds)
+    private static final long PANIC_DURATION = 120000; // 60000 milliseconds (60 seconds)
+
+    private double laptime = ModeSelect.laptime;
+    private double oldlaptime = 0;
+    private long lastLapVal = ModeSelect.lastLapVal;
+    private long oldLastLap = 0;
 
 
     FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -78,6 +87,11 @@ public class Handling {
     DatabaseReference messRef = database.getReference("/Message to driver/message");
     DatabaseReference panicRef = database.getReference("Panic");
     DatabaseReference phoneBattRef = database.getReference("phoneBattery");
+    DatabaseReference raceTimerRef = database.getReference("raceTimer");
+    DatabaseReference startTimerRef = database.getReference("Start Timer");
+    DatabaseReference remainingTime = database.getReference("remaining Time");
+    DatabaseReference lapTimeRef = database.getReference("currentLapTime");
+    DatabaseReference lastLapTimeRef = database.getReference("previousLapTime");
     private String oldMessage = "old";
 
 
@@ -114,11 +128,46 @@ public class Handling {
         });
     }
 
+    private void getRaceTimer() {                       //function to get the race timer from the database
+        raceTimerRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Long value = dataSnapshot.getValue(Long.class);
+                if (value != null) {
+                    MainActivity.raceTime = value.intValue();
+                    Log.d("Firebase", "Timer: " + MainActivity.raceTime);
+                } else {
+                    Log.e("Firebase", "Race timer value is null");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Handle the error
+                Log.e("Firebase", "Error reading timer from Firebase", error.toException());
+            }
+        });
+    }
+    private void startTimer() {                       //function to get the race timer from the database
+        startTimerRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                int startTimer = dataSnapshot.getValue(Integer.class);
+                MainActivity.started = startTimer;
+                Log.d("Firebase", "Start Timer: " + MainActivity.started);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
     private void createRunnable() {
         runnable = new Runnable() {
             @Override
             public void run() {
-                checkAndHandlePanic();
 
                 if(MainActivity.speedInt != oldspeed) {
                     speedRef.setValue(MainActivity.speedInt);
@@ -192,10 +241,30 @@ public class Handling {
                 if(MainActivity.phoneBat != oldphoneBat) {
                     phoneBattRef.setValue(MainActivity.phoneBat);
                     oldphoneBat = MainActivity.phoneBat;
+                }if(MainActivity.decreasingTime != oldremaining) {                  //sending remaining time of timer to site so we can check it is on time
+                    remainingTime.setValue(MainActivity.decreasingTime);
+                    oldremaining = (int)(MainActivity.decreasingTime);
+                }if (MainActivity.completed){
+                    startTimerRef.setValue(0);
+                    MainActivity.completed = false;
+                }if (ModeSelect.laptime != oldlaptime) {
+                    lapTimeRef.setValue(ModeSelect.laptime);
+                    oldlaptime = ModeSelect.laptime;
+                }if (ModeSelect.lastLapVal != oldLastLap) {
+                    lastLapTimeRef.setValue(ModeSelect.lastLapVal);
+                    oldLastLap = ModeSelect.lastLapVal;
+                }if(MainActivity.panicking != oldpanicking) {
+                    panicRef.setValue(MainActivity.panicking);
+                    oldpanicking = MainActivity.panic;
+                }
+                if((System.currentTimeMillis() - MainActivity.panicStart)> PANIC_DURATION){                    MainActivity.panic = 0;
+                     MainActivity.panicking = 0;
                 }
 
-                readMessageFromFirebase();
 
+                readMessageFromFirebase();
+                getRaceTimer();
+                startTimer();
 
                 handler.postDelayed(this, intervalMillis);
             }
@@ -204,21 +273,6 @@ public class Handling {
     public void start() {       // call this with the Handling function in anotehr class to start repeating
         handler.post(runnable);
 
-    }
-    private void checkAndHandlePanic() {
-        if (panic == 1 && oldpanic == 0) {
-            panicking = 1;
-            long startTime = System.currentTimeMillis();
-
-            while (System.currentTimeMillis() - startTime < PANIC_DURATION) {
-                // Handle panic state here if needed
-            }
-
-            panicking = 0;
-        }
-
-        // Update oldPanic for the next check
-        oldpanic = panic;
     }
 
 
