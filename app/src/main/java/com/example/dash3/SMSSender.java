@@ -11,7 +11,7 @@ public class SMSSender {                //changed to loop through twice with a 3
     static String josh = "7058229216"; // Replace with the recipient's phone number
     static String ethan = "5195320619"; // Replace with the recipient's phone number
     static String chooch = "5196970400"; // Replace with the recipient's phone number
-    static String message = "Cars Broke!! Cars Broke!!"; // Replace with your message
+    static String message = "Core 1 Panic'ed!! Core1 Panic'd!!"; // Replace with your message
     static String[] recipients = {josh, ethan};//, chooch};
     static boolean sending = false;
     static int count = 0;
@@ -36,7 +36,7 @@ public class SMSSender {                //changed to loop through twice with a 3
                 return;
             }
 
-            /*
+
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -45,7 +45,7 @@ public class SMSSender {                //changed to loop through twice with a 3
                 }
             }, 30000); // 15 seconds delay
 
-             */
+
         }
     }
 }

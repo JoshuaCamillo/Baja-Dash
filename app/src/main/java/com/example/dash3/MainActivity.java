@@ -6,48 +6,23 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.hardware.usb.UsbDeviceConnection;
-import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.AudioManager;
-import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
-import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
-import androidx.annotation.NonNull;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.widget.ToggleButton;
-import android.content.Intent;
-import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
-
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.hoho.android.usbserial.driver.UsbSerialDriver;
-import com.hoho.android.usbserial.driver.UsbSerialPort;
-import com.hoho.android.usbserial.driver.UsbSerialProber;
-
-import org.w3c.dom.Text;
-
-import java.io.IOException;
-import java.util.List;
 
 // main class where everything is called and initialized
 public class MainActivity extends AppCompatActivity{
@@ -56,47 +31,46 @@ public class MainActivity extends AppCompatActivity{
     private PhoneBattery batteryUpdater;                //create instance of phonebattery class
     private Speedometer speedUpdater;                   //create instance of speedometer class
     private USBRead usbRead;                            //create instance of usbread class
-    private SpeedoUpdate speedoUpdate;
+    private SpeedoUpdate speedoUpdate;                  //create instance of speedoupdate class
     private ModeSelect enduroSelect;                      //instance of mode select to choose enduro mode for timers
 
     public static final long SCREEN_DISPLAY_DURATION = 120000;      //change to durarion of message to driver on screen
     public static int LB, RB, LF, RF;                   //create variables for lpots
-
-    private static final int REQUEST_LOCATION_PERMISSION = 1;
-    private LocationManager locationManager;
     private UsbSerialInterface usbSerialInterface; // Instantiating the UsbSerialInterface class
-    private SensorManager sensorManager;
-    public static boolean isSRButtonPressed = false;
-    public static boolean isKphSelected = false;
-    public static boolean enduro = false;
-    private static TextView messageLayout;
+    private SensorManager sensorManager;                //create instance of sensormanager
+    public static boolean speedRPMSelect = false;        //flag for when speed is on screen or RPM
+    public static boolean isKphSelected = false;        //flag for when speed is in KPH or MPH
+    public static boolean enduro = false;           //flag for when enduro mode is selected
+    private static TextView messageLayout;        //create instance of textview for messages to driver
     private Sensor gyroSensor;
     public static double latitude, longitude;           //create variables for latitude and longitude
 
     public static int RPM = 0;
     public static String speedText ="";
-    public static int speedInt = 0;
-    public static int speedKPH = 0;
-    public static int fuel;
-    public static int battery;
+    public static int speedInt = 0;         //integer value of speed in MPH
+    public static int speedKPH = 0;         //conversion to KPH for screen display
+    public static int fuel;         //fuel percentage
+    public static int battery;          //dewalt battery percentage on car
+    public static int ECVTBat;          //battery percentage of ECVT battery
     public static float Xa, Ya, Za = 0.0f;
     public static float Xpos, Ypos, Zpos = 0.0f;
     private RPMGaugeView rpmGauge;
     public static boolean speedSelect = false;
     public static String message = "Starting";
+    public static boolean messageFlag = false;
     public static volatile String data;
     public static int panic;
     public static int oldPanic;
+    public static boolean panicFlag = false;
+    public long panicTime;
     public static boolean firstRound = true;
     public static long panicStart;
     public static int panicking;
     public static long readPanic;
-    public static long betweenPanic;
-    public static long debugStart;
-    public static long debugEnd;
-    public static long debugBetween;
+    public static boolean firstPanic = true;
     private static final int SMS_PERMISSION_REQUEST_CODE = 1;
     public static int mute = 0;
+    public static boolean muteStateChange = false;
     public boolean muteFlag = false;
     public static int phoneBat;      //battery percentage
     private int sleepTime = 50;
@@ -150,15 +124,13 @@ public class MainActivity extends AppCompatActivity{
         IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_ATTACHED);      //filter for usb device attached
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
 
-        TextView testText = (TextView)findViewById(R.id.speedText);
-        TextView alternateText = (TextView)findViewById(R.id.alternateText);
+        TextView testText = (TextView) findViewById(R.id.speedText);
+        TextView alternateText = (TextView) findViewById(R.id.alternateText);
         speedoUpdate = new SpeedoUpdate(testText, alternateText);
 
         TextView unitsText = findViewById(R.id.Units);
         TextView lastLap = findViewById(R.id.lastLap);
         TextView diffLap = findViewById(R.id.lapDifference);
-        ProgressBar fuelBar = findViewById(R.id.FuelGuage);
-        ProgressBar battBar = findViewById(R.id.BatteryGuage);
 
         enduroSelect = new ModeSelect(unitsText, lastLap, diffLap);            //initialize class to select enduro mode
 
@@ -166,13 +138,13 @@ public class MainActivity extends AppCompatActivity{
         modeSelect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b){
+                if (b) {
                     enduro = true;
                     Log.d("Mainenduro", String.valueOf(enduro));
                     refTime = System.currentTimeMillis();
                     ModeSelect.enduro = enduro;
-                                                                                        //make this button change the display mode from rpm, to enduro timer and lap timer
-                }else{
+                    //make this button change the display mode from rpm, to enduro timer and lap timer
+                } else {
                     enduro = false;
                     ModeSelect.enduro = enduro;
                 }
@@ -194,11 +166,11 @@ public class MainActivity extends AppCompatActivity{
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
 
-                if(b){
+                if (b) {
                     handling.start();           //start sending in the set delay
                     batteryUpdater.start();
 
-                }else{
+                } else {
                     handling.stop();            //stop sending data
                     batteryUpdater.stop();
                 }
@@ -222,61 +194,91 @@ public class MainActivity extends AppCompatActivity{
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            if(mute == 1){
-                                                if (!muteFlag){     //flag to make sure it doesnt repeat the call to unmute the microphone
+                                            if (mute == 1) {
+                                                messageFlag = false;
+                                                if (!muteFlag) {     //flag to make sure it doesnt repeat the call to unmute the microphone
                                                     AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);     // mute the microphone
                                                     audioManager.setMicrophoneMute(false);
                                                     muteFlag = true;
                                                 }
                                                 messageLayout.setVisibility(View.VISIBLE);          //show the message for being unmuted
-                                                messageLayout.setText("Unmuted");
+                                                if (!panicFlag) {
+                                                    if(!flashing){
+                                                        messageLayout.setText("Unmuted");
+                                                    }
+
+                                                }
                                             } else {
                                                 if (!audioManager.isMicrophoneMute()) {     //checks to make sure its not repeating this call for mute
                                                     audioManager.setMicrophoneMute(true);       //mute the microphone
                                                 }
                                                 muteFlag = false;
-                                                messageLayout.setVisibility(View.INVISIBLE);        //hide the message
-                                            }
-                                            if(panic != oldPanic){                 //runs when panic value changes coming from esp32
-                                                oldPanic = panic;
-                                                checkAndSendSMS();               //calls function to send sms message using SMSsender
-                                                panicking = 1;
-                                                panicStart = System.currentTimeMillis();     //start time for panic button being sent to website
+                                                if (!panicFlag) {
+                                                    if(!messageFlag) {
+                                                        messageLayout.setVisibility(View.INVISIBLE);        //hide the message
+                                                    }
+                                                }
 
-                                                // Show "Sent" message
-                                                messageLayout.setVisibility(View.VISIBLE);
-                                                messageLayout.setText("Sent");
+                                            }
+                                            if (panic != oldPanic) {
+                                                oldPanic = panic;
+                                                checkAndSendSMS();
+                                                panicking = 1;
+                                                panicStart = System.currentTimeMillis();
+                                                panicFlag = true;
 
                                                 // Set a delayed runnable to hide the layout after 5 seconds
                                                 new Handler().postDelayed(new Runnable() {
+                                                    private boolean visible = true;
+
                                                     @Override
                                                     public void run() {
-                                                        messageLayout.setVisibility(View.INVISIBLE);
+                                                        if (visible) {
+                                                            messageLayout.setText("PANIC!!");
+                                                            messageLayout.setVisibility(View.VISIBLE);
+                                                        } else {
+                                                            if (mute == 1) {
+                                                                messageLayout.setVisibility(View.VISIBLE);
+                                                                messageLayout.setText("Unmuted");
+                                                            } else {
+                                                                if(!messageFlag) {
+                                                                    messageLayout.setVisibility(View.INVISIBLE);
+                                                                }
+                                                            }
+                                                        }
+                                                        visible = !visible;
+                                                        if (System.currentTimeMillis() - panicStart < 10000) {  // Repeat until 5 seconds have passed
+                                                            new Handler().postDelayed(this, 500); // Toggle every second
+                                                        } else {
+                                                            panicFlag = false;
+                                                            messageLayout.setVisibility(View.INVISIBLE);
+                                                        }
                                                     }
-                                                }, 5000); // 5000 milliseconds = 5 seconds
+                                                }, 1000); // Start toggling after 1 second
                                             }
-                                            if(enduro) {                        //changing number in bar for timer in SpeedoUpdate
+
+                                            if (enduro) {                        //changing number in bar for timer in SpeedoUpdate
                                                 elapsedTime = System.currentTimeMillis() - refTime;
 
-                                                if(started ==1){                    //when the race timer is updated, starts the value for decreasing , and reset the flags tfor interacting with firebase
+                                                if (started == 1) {                    //when the race timer is updated, starts the value for decreasing , and reset the flags tfor interacting with firebase
                                                     decreasingTime = raceTime;
                                                     completed = true;
-                                                    Log.d("dec", String.valueOf(decreasingTime));;
+                                                    Log.d("dec", String.valueOf(decreasingTime));
+                                                    ;
                                                     refTime = System.currentTimeMillis();
-                                                }
-                                                else if ((raceTime-elapsedTime)>0){     // if the timer is greater than 0, decrease it by the amount of the delay
+                                                } else if ((raceTime - elapsedTime) > 0) {     // if the timer is greater than 0, decrease it by the amount of the delay
                                                     decreasingTime = raceTime - elapsedTime;
-                                                    rpmGauge.setCurrentValue((int)(decreasingTime));     //display the timer on the bar
+                                                    rpmGauge.setCurrentValue((int) (decreasingTime));     //display the timer on the bar
                                                 }
                                             } else {
                                                 rpmGauge.setCurrentValue(RPM);                //if not in enduro, display rpm on bar
                                             }
-                                                // Handle normal mode
-                                                ProgressBar fuelBar = findViewById(R.id.FuelGuage);
-                                                fuelBar.setProgress(fuel);
-                                                ProgressBar battBar = findViewById(R.id.BatteryGuage);
-                                                battBar.setProgress(battery);
-                                            }
+                                            // Handle normal mode
+                                            ProgressBar fuelBar = findViewById(R.id.FuelGuage);
+                                            fuelBar.setProgress(fuel);
+                                            ProgressBar battBar = findViewById(R.id.BatteryGuage);
+                                            battBar.setProgress(battery);
+                                        }
 
                                     });
 
@@ -295,7 +297,7 @@ public class MainActivity extends AppCompatActivity{
                     usbRead.startCommunication();
                     speedoUpdate.startUpdates();
                     enduroSelect.startUpdates();
-                    orientation.startListening(new Orientation.OrientationListener(){
+                    orientation.startListening(new Orientation.OrientationListener() {
 
                         public void onOrientationChanged(float pitch, float roll) {
                             // Handle the continuous orientation updates here
@@ -323,51 +325,7 @@ public class MainActivity extends AppCompatActivity{
         speedRPM.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                isSRButtonPressed = b;
-            }
-        });
-
-        /*Button sendMessage = findViewById(R.id.Message);
-                                                                        // Check if SMS permission is not granted
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
-                != PackageManager.PERMISSION_GRANTED) {
-             Request SMS permission
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.SEND_SMS},
-                    SMS_PERMISSION_REQUEST_CODE);
-        } else {
-            sendMessage.setOnClickListener(new View.OnClickListener() {                 //sending sms message when button is pressed, will be changed to when panic is true
-                @Override
-                public void onClick(View view) {
-                    // Send the SMS message directly
-                    SMSSender.sendSMS();                               //call send sms class to send message
-                }
-            });
-        }
-                 */                 //remove this after testing button works with sending sos
-
-        ToggleButton muteButton = findViewById(R.id.micMutetoggle);
-        muteButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {
-                    mute = 1;
-                    messageLayout.setVisibility(View.VISIBLE);
-                    messageLayout.setText("Unmuted");
-                } else {
-                    mute = 0;
-                    messageLayout.setVisibility(View.INVISIBLE);
-                }
-            }
-        });
-
-        Button timerRest = findViewById(R.id.testTimer);
-        timerRest.setOnClickListener(new View.OnClickListener() {                //testing timer in enduro
-            @Override
-            public void onClick(View view) {
-                // Send the SMS message directly
-                laptimeReset = 1;                               //resets the lap timer for enduro
-                                                //remove when buttons are made, functionality should be taken care of if button sends 1 to lapTimer to phone
+                speedRPMSelect = b;
             }
         });
     }
@@ -430,24 +388,53 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
+    // Define the Handler as a class variable
+    private static Handler messageHandler = new Handler();
+    public static boolean flashing = false; // Flag to indicate if flashing is active
+
     public static void updateMessage(String newMessage) {
         Log.d("UpdateMessage", "New Message: " + newMessage);
 
         if (!newMessage.equals(message)) {
+            messageFlag = true;
             messageLayout.setVisibility(View.VISIBLE);
             messageLayout.setText(newMessage);
 
-            // Set a delayed runnable to hide the layout after a specific duration (e.g., 5000 milliseconds)
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    messageLayout.setVisibility(View.INVISIBLE);
-                }
-            }, SCREEN_DISPLAY_DURATION); // Use the constant SCREEN_DISPLAY_DURATION or adjust the duration as needed
+            // Check if mute state has changed
+            if (mute == 0 && flashing) {
+                // Stop the flashing
+                messageHandler.removeCallbacksAndMessages(null);
+                flashing = false;
+                messageLayout.setVisibility(View.INVISIBLE);
+            }
 
-            message = newMessage;
-            Log.d("Updated Message", newMessage);
+            // Start flashing if mute is 1
+            if (mute == 1 && !flashing) {
+                flashing = true;
+                messageHandler.postDelayed(new Runnable() {
+                    private boolean visible = true;
+
+                    @Override
+                    public void run() {
+                        if (visible) {
+                            messageLayout.setText(newMessage);
+                        } else {
+                            messageLayout.setText("Unmuted");
+                        }
+                        visible = !visible;
+                        if (mute == 1) { // Repeat until mute changes to 0
+                            messageHandler.postDelayed(this, 1000); // Toggle every 500 milliseconds
+                        } else {
+                            flashing = false; // Reset flashing flag
+                            messageLayout.setVisibility(View.INVISIBLE);
+                        }
+                    }
+                }, 1000); // Start toggling after 1 second
+            }
         }
+
+        message = newMessage;
+        Log.d("Updated Message", newMessage);
     }
 
 }

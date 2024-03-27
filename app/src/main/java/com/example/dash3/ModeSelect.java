@@ -1,7 +1,7 @@
 package com.example.dash3;
 
 import static com.example.dash3.MainActivity.isKphSelected;
-import static com.example.dash3.MainActivity.isSRButtonPressed;
+import static com.example.dash3.MainActivity.speedRPMSelect;
 
 
 import static java.lang.Math.abs;
@@ -9,10 +9,7 @@ import static java.lang.Math.abs;
 import android.graphics.Color;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import org.w3c.dom.Text;
 
 public class ModeSelect {
     private final TextView unitsText;
@@ -61,8 +58,9 @@ public class ModeSelect {
             Log.d("enduroselect", String.valueOf(enduro));
             // Update the UI with speed and RPM values
             if(enduro) {                                    //if teh enduro button is pressed, allow driver to reset their timer
-                if(resetTimer != MainActivity.oldLaptimeReset){             // checks if there was a change in the input form esp
-                    MainActivity.oldLaptimeReset = resetTimer;      // set the old value to current so change is known
+                if(MainActivity.laptimeReset != MainActivity.oldLaptimeReset){             // checks if there was a change in the input form esp
+                    MainActivity.oldLaptimeReset = MainActivity.laptimeReset;      // set the old value to current so change is known
+                    //MainActivity.laptimeReset = 0;
                     if(firstTime){
                         lastLapTime = "";
                         firstTime = false;                  //not done doing the last time thing
@@ -123,7 +121,7 @@ public class ModeSelect {
             else {
                 lastLap.setText("");                //make the last lap invisible when not in enduro
                 diffLap.setText("");                //make the difference in lap times invisible when not in enduro
-                if (isSRButtonPressed) {
+                if (speedRPMSelect) {
                     unitsText.setText("RPM");
                 } else if (isKphSelected) {
                     unitsText.setText("KPH");

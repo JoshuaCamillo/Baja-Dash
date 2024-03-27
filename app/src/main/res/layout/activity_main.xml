@@ -68,18 +68,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/toggle_button_selector"
+            android:background="@drawable/enduro_select"
             android:checked="false"
             android:text="ToggleButton"
             android:textOff="Enduro OFF"
-            android:textOn="ENDURO ON" />
+            android:textOn="ENDURO ON"
+            android:textColor="@color/enduro_toggle_text_colour" />
 
         <ToggleButton
             android:id="@+id/SR"
             android:layout_width="21dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/toggle_button_selector"
+            android:background="@drawable/speed_rpm_select"
             android:checked="false"
             android:text="ToggleButton"
             android:textOff="SPEED"
@@ -90,7 +91,7 @@
             android:layout_width="21dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/toggle_button_selector"
+            android:background="@drawable/speed_rpm_select"
             android:checked="false"
             android:text="ToggleButton"
             android:textOff="MPH"
@@ -121,9 +122,9 @@
         android:id="@+id/FuelGuage"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="175dp"
-        android:layout_height="60dp"
+        android:layout_height="50dp"
         android:layout_gravity="center"
-        android:layout_marginEnd="430dp"
+        android:layout_marginEnd="440dp"
         android:max="100"
         android:progress="0"
         android:progressDrawable="@drawable/fuelguage"
@@ -137,9 +138,9 @@
         android:id="@+id/BatteryGuage"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="175dp"
-        android:layout_height="60dp"
+        android:layout_height="50dp"
         android:layout_gravity="center"
-        android:layout_marginEnd="510dp"
+        android:layout_marginEnd="496dp"
         android:max="100"
         android:progress="0"
         android:progressDrawable="@drawable/batteryguage"
@@ -147,7 +148,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.497" />
+        app:layout_constraintVertical_bias="0.498" />
 
     <TextView
         android:id="@+id/Units"
@@ -206,40 +207,6 @@
         tools:layout_editor_absoluteX="152dp"
         tools:layout_editor_absoluteY="-151dp"
         tools:visibility="gone" />
-
-    <Button
-        android:id="@+id/Message"
-        android:layout_width="81dp"
-        android:layout_height="53dp"
-        android:layout_marginEnd="180dp"
-        android:layout_marginBottom="8dp"
-        android:text="Send"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <ToggleButton
-        android:id="@+id/micMutetoggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="24dp"
-        android:text="Speak"
-        android:textOff="muted"
-        android:textOn="unmuted"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/Message"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.82" />
-
-    <Button
-        android:id="@+id/testTimer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="276dp"
-        android:layout_marginEnd="388dp"
-        android:text="timer"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -99,13 +99,6 @@ public class USBRead {
                             partialData = new StringBuilder(fullData);
                         }
                     }
-
-                    // Add a delay before the next read attempt if needed
-                    /*try {
-                        Thread.sleep(1); // this sleep determines how often the data is read
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }*/
                 }
 
                 // Close USB communication

@@ -56,6 +56,7 @@ public class Handling {
     private boolean firstRun  = true;
     public static int raceTime;
     private int oldremaining = -1;
+    private int oldECVTBat = -1;
 
     // Set this duration according to your requirements
     private static final long PANIC_DURATION = 120000; // 60000 milliseconds (60 seconds)
@@ -92,6 +93,7 @@ public class Handling {
     DatabaseReference remainingTime = database.getReference("remaining Time");
     DatabaseReference lapTimeRef = database.getReference("currentLapTime");
     DatabaseReference lastLapTimeRef = database.getReference("previousLapTime");
+    DatabaseReference ECVTBatRef = database.getReference("ECVTBattery");
     private String oldMessage = "old";
 
 
@@ -257,10 +259,12 @@ public class Handling {
                     panicRef.setValue(MainActivity.panicking);
                     oldpanicking = MainActivity.panic;
                 }
-                if((System.currentTimeMillis() - MainActivity.panicStart)> PANIC_DURATION){                    MainActivity.panic = 0;
+                if((System.currentTimeMillis() - MainActivity.panicStart)> PANIC_DURATION){
                      MainActivity.panicking = 0;
+                }if (MainActivity.ECVTBat != oldECVTBat) {
+                    ECVTBatRef.setValue(MainActivity.ECVTBat);
+                    oldECVTBat = MainActivity.ECVTBat;
                 }
-
 
                 readMessageFromFirebase();
                 getRaceTimer();

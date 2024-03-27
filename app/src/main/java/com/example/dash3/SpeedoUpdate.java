@@ -39,7 +39,7 @@ public class SpeedoUpdate {
 
             timedisp = String.format("%01d:%02d:%02d", hours, minutes, seconds);
 
-            if (MainActivity.isSRButtonPressed) {
+            if (MainActivity.speedRPMSelect) {
                testText.setText(String.valueOf(MainActivity.RPM));
                if(!MainActivity.enduro) {
                    alternateText.setText(MainActivity.speedText);
@@ -47,7 +47,7 @@ public class SpeedoUpdate {
                    alternateText.setText(timedisp);
                }
             } else {
-                testText.setText(String.valueOf(MainActivity.mute));
+                testText.setText(MainActivity.speedText);
                 if(!MainActivity.enduro) {
                     alternateText.setText(String.valueOf(MainActivity.RPM));
                 }else{
@@ -71,7 +71,7 @@ public class SpeedoUpdate {
             Log.d("Panic", String.valueOf(MainActivity.panic));
             Log.d("PhoneBat", String.valueOf(MainActivity.phoneBat));
             Log.d("KPHselect", String.valueOf(MainActivity.isKphSelected));
-            Log.d("SRButton", String.valueOf(MainActivity.isSRButtonPressed));
+            Log.d("SRButton", String.valueOf(MainActivity.speedRPMSelect));
 
 
             handler.postDelayed(this, 25);                      //change refresh rate of speedo display
