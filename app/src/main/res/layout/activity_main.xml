@@ -9,17 +9,17 @@
 
     <TextView
         android:id="@+id/lapDifference"
-        android:layout_width="88dp"
-        android:layout_height="36dp"
+        android:layout_width="108dp"
+        android:layout_height="29dp"
         android:text=""
-        android:textSize="30dp"
+        android:textSize="25dp"
         android:textStyle="bold|italic"
         app:layout_constraintBottom_toTopOf="@+id/lastLap"
         app:layout_constraintEnd_toEndOf="@+id/lastLap"
-        app:layout_constraintHorizontal_bias="0.986"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.994" />
 
     <com.example.dash3.RPMGaugeView
         android:id="@+id/rpmGauge"
@@ -155,21 +155,21 @@
         android:layout_width="152dp"
         android:layout_height="71dp"
         android:text="MPH"
-        android:textSize="50dp"
+        android:textSize="45dp"
         android:textStyle="bold|italic"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.975"
+        app:layout_constraintHorizontal_bias="0.978"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.691" />
+        app:layout_constraintVertical_bias="0.795" />
 
     <TextView
         android:id="@+id/lastLap"
         android:layout_width="110dp"
         android:layout_height="37dp"
         android:text=""
-        android:textSize="35dp"
+        android:textSize="30dp"
         android:textStyle="bold|italic"
         app:layout_constraintBottom_toTopOf="@+id/Units"
         app:layout_constraintEnd_toEndOf="parent"
@@ -192,6 +192,20 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.008" />
 
+
+    <TextView
+        android:id="@+id/carAhead"
+        android:layout_width="80dp"
+        android:layout_height="54dp"
+        android:layout_marginBottom="4dp"
+        android:text="Ahead"
+        android:textColor="#FFE606"
+        android:textSize="50dp"
+        android:textStyle="bold|italic"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/lapDifference"
+        app:layout_constraintEnd_toEndOf="@+id/lapDifference" />
+
     <TextView
         android:id="@+id/messageLayout"
         android:layout_width="match_parent"
@@ -206,6 +220,41 @@
         android:visibility="invisible"
         tools:layout_editor_absoluteX="152dp"
         tools:layout_editor_absoluteY="-151dp"
+        tools:visibility="gone" />
+
+    <TextView
+        android:id="@+id/intro"
+        android:layout_width="698dp"
+        android:layout_height="61dp"
+        android:gravity="top|center"
+        android:text="LETS GO RACING"
+        android:background="@color/white"
+        android:textColor="#9D07FA"
+        android:textSize="45sp"
+        android:textStyle="bold"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/rpmGauge"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/launchdisp"
+        android:layout_width="match_parent"
+        android:layout_height="230dp"
+        android:layout_centerInParent="true"
+        android:autoSizeTextType="uniform"
+        android:background="#2FFF00"
+        android:gravity="center"
+        android:text="Launch"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/rpmGauge"
+        tools:layout_editor_absoluteX="152dp"
         tools:visibility="gone" />
 
 

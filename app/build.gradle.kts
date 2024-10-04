@@ -45,4 +45,6 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-database:20.2.2")
     implementation ("com.github.mik3y:usb-serial-for-android:3.4.3")
+    implementation ("com.google.firebase:firebase-storage:20.0.3")
+
 }

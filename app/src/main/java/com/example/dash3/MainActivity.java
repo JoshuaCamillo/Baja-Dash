@@ -10,10 +10,12 @@ import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -24,6 +26,12 @@ import androidx.core.content.ContextCompat;
 import android.widget.ToggleButton;
 import android.hardware.usb.UsbManager;
 
+import org.w3c.dom.Text;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 // main class where everything is called and initialized
 public class MainActivity extends AppCompatActivity{
 
@@ -33,8 +41,7 @@ public class MainActivity extends AppCompatActivity{
     private USBRead usbRead;                            //create instance of usbread class
     private SpeedoUpdate speedoUpdate;                  //create instance of speedoupdate class
     private ModeSelect enduroSelect;                      //instance of mode select to choose enduro mode for timers
-
-    public static final long SCREEN_DISPLAY_DURATION = 120000;      //change to durarion of message to driver on screen
+    private static final int STORAGE_PERMISSION_REQUEST_CODE = 100;
     public static int LB, RB, LF, RF;                   //create variables for lpots
     private UsbSerialInterface usbSerialInterface; // Instantiating the UsbSerialInterface class
     private SensorManager sensorManager;                //create instance of sensormanager
@@ -42,8 +49,12 @@ public class MainActivity extends AppCompatActivity{
     public static boolean isKphSelected = false;        //flag for when speed is in KPH or MPH
     public static boolean enduro = false;           //flag for when enduro mode is selected
     private static TextView messageLayout;        //create instance of textview for messages to driver
+    public static TextView alternateText;        //create instance of textview for alternate text
     private Sensor gyroSensor;
     public static double latitude, longitude;           //create variables for latitude and longitude
+    public static boolean startup = true;
+    public static boolean onlyOnce = true;          //makes sure it only happens once
+    private static TextView intro;
 
     public static int RPM = 0;
     public static String speedText ="";
@@ -62,17 +73,16 @@ public class MainActivity extends AppCompatActivity{
     public static int panic;
     public static int oldPanic;
     public static boolean panicFlag = false;
-    public long panicTime;
     public static boolean firstRound = true;
     public static long panicStart;
     public static int panicking;
-    public static long readPanic;
     public static boolean firstPanic = true;
     private static final int SMS_PERMISSION_REQUEST_CODE = 1;
     public static int mute = 0;
     public static boolean muteStateChange = false;
     public boolean muteFlag = false;
     public static int phoneBat;      //battery percentage
+    public static double phoneTemp;      //battery temperature
     private int sleepTime = 50;
     public static int raceTime;
     public static long refTime;
@@ -83,6 +93,12 @@ public class MainActivity extends AppCompatActivity{
     public static boolean completed = false;
     public static int laptimeReset;
     public static int oldLaptimeReset;
+    public static int launch = 0;
+    public static String carNum;
+    public static String scrapedLastLap;
+    public static String scrapedBestLap;
+    public static int scrapedDiff;
+    public static float chargeAmps;
 
     protected void onResume() {
         super.onResume();                             //when app is open, the gyroscopic accelerations are measured
@@ -96,15 +112,38 @@ public class MainActivity extends AppCompatActivity{
         super.onPause();
         // Unregister the gyroscope sensor listener to conserve battery
         sensorManager.unregisterListener(gyroListener);
+
     }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager != null) {
+            audioManager.setMicrophoneMute(false); // Unmute the microphone
+        }
+    }
+
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);     //set the layout to activity_main
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);       //keeps the screen from turning off
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        usbSerialInterface = new UsbSerialInterface();                      //create instance of usbserialinterface class
+        // Check if the app has permission to write to external storage
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            // Permission not granted, request it
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    STORAGE_PERMISSION_REQUEST_CODE);
+        }//keeps the screen from turning off
+
+        ToggleButton toggle2 = findViewById(R.id.DataButton);
+        ToggleButton sendButton = findViewById(R.id.Send);                              //button to select if data will be sent to firebase
+
+        UsbSerialInterface usbSerialInterface = new UsbSerialInterface(toggle2, sendButton);
+        //create instance of usbserialinterface class
         messageLayout = findViewById(R.id.messageLayout);                   //sets the layout for displaying messages to driver
 
         Orientation orientation = new Orientation(this);            // initialize the orientation class for pitch, roll, yaw values
@@ -118,19 +157,23 @@ public class MainActivity extends AppCompatActivity{
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE); // Get the audio manager for mic control
-        audioManager.setMicrophoneMute(true); // Mute the microphone by default
+        audioManager.setMicrophoneMute(false); // Mute the microphone by default           trying setting this when data is turned on so when we dont have the button from wheel, mic still works
 
         usbRead = new USBRead(this);                    //initialize class to read from usb
         IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_ATTACHED);      //filter for usb device attached
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
 
         TextView testText = (TextView) findViewById(R.id.speedText);
-        TextView alternateText = (TextView) findViewById(R.id.alternateText);
-        speedoUpdate = new SpeedoUpdate(testText, alternateText);
+        alternateText = (TextView) findViewById(R.id.alternateText);
+        TextView carNumText = (TextView) findViewById(R.id.carAhead);
+        speedoUpdate = new SpeedoUpdate(testText, alternateText, carNumText);        //initialize class to update speed and RPM on screen
+
+        TextView launchText = findViewById(R.id.launchdisp);
 
         TextView unitsText = findViewById(R.id.Units);
         TextView lastLap = findViewById(R.id.lastLap);
         TextView diffLap = findViewById(R.id.lapDifference);
+        intro = findViewById(R.id.intro);
 
         enduroSelect = new ModeSelect(unitsText, lastLap, diffLap);            //initialize class to select enduro mode
 
@@ -140,7 +183,7 @@ public class MainActivity extends AppCompatActivity{
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if (b) {
                     enduro = true;
-                    Log.d("Mainenduro", String.valueOf(enduro));
+                    //Log.d("Mainenduro", String.valueOf(enduro));
                     refTime = System.currentTimeMillis();
                     ModeSelect.enduro = enduro;
                     //make this button change the display mode from rpm, to enduro timer and lap timer
@@ -160,9 +203,8 @@ public class MainActivity extends AppCompatActivity{
             }
         });
 
-        Handling handling = new Handling(125);// starts getting phone battery and sending to furebase
-        ToggleButton toggle = findViewById(R.id.Send);                              //button to select if data will be sent to firebase
-        toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        Handling handling = new Handling( this,125);// starts getting phone battery and sending to furebase
+        sendButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
 
@@ -176,14 +218,13 @@ public class MainActivity extends AppCompatActivity{
                 }
             }
         });
-
-        ToggleButton toggle2 = findViewById(R.id.DataButton);
         rpmGauge = findViewById(R.id.rpmGauge);
         toggle2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if (b) {
-                    Log.d("DataButton", "Data Button is checked");
+                    audioManager.setMicrophoneMute(false); // unMute the microphone by default
+                    //Log.d("DataButton", "Data Button is checked");
                     // Create a new updateRPMThread and start it
                     updateRPMThread = new Thread(new Runnable() {
                         @Override
@@ -194,6 +235,18 @@ public class MainActivity extends AppCompatActivity{
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
+                                            if(launch == 1){
+                                                launchText.setVisibility(View.VISIBLE);
+                                                launchText.setText("LAUNCH");
+                                            }else{
+                                                launchText.setVisibility(View.INVISIBLE);
+                                            }
+
+                                            if(!startup && onlyOnce) {
+                                                onlyOnce = false;
+                                                introAnimation();
+                                            }
+                                            /*      Commented out mute control due to request for always open mic
                                             if (mute == 1) {
                                                 messageFlag = false;
                                                 if (!muteFlag) {     //flag to make sure it doesnt repeat the call to unmute the microphone
@@ -220,6 +273,7 @@ public class MainActivity extends AppCompatActivity{
                                                 }
 
                                             }
+                                             */
                                             if (panic != oldPanic) {
                                                 oldPanic = panic;
                                                 checkAndSendSMS();
@@ -233,6 +287,7 @@ public class MainActivity extends AppCompatActivity{
 
                                                     @Override
                                                     public void run() {
+
                                                         if (visible) {
                                                             messageLayout.setText("PANIC!!");
                                                             messageLayout.setVisibility(View.VISIBLE);
@@ -263,7 +318,7 @@ public class MainActivity extends AppCompatActivity{
                                                 if (started == 1) {                    //when the race timer is updated, starts the value for decreasing , and reset the flags tfor interacting with firebase
                                                     decreasingTime = raceTime;
                                                     completed = true;
-                                                    Log.d("dec", String.valueOf(decreasingTime));
+                                                    //Log.d("dec", String.valueOf(decreasingTime));
                                                     ;
                                                     refTime = System.currentTimeMillis();
                                                 } else if ((raceTime - elapsedTime) > 0) {     // if the timer is greater than 0, decrease it by the amount of the delay
@@ -301,7 +356,7 @@ public class MainActivity extends AppCompatActivity{
 
                         public void onOrientationChanged(float pitch, float roll) {
                             // Handle the continuous orientation updates here
-                            Log.d("Orientation", "Pitch: " + pitch + ", Roll: " + roll);
+                            //Log.d("Orientation", "Pitch: " + pitch + ", Roll: " + roll);
                             // You can update your global variables here if needed
                         }
                     });
@@ -328,6 +383,11 @@ public class MainActivity extends AppCompatActivity{
                 speedRPMSelect = b;
             }
         });
+
+        // Set the initial state of the toggle buttons
+        toggle2.setChecked(true); // Turn on toggle2
+        sendButton.setChecked(true); // Turn on sendButton
+
     }
 
     // Thread to continuously update the RPM gauge and speed text
@@ -341,14 +401,14 @@ public class MainActivity extends AppCompatActivity{
                         @Override
                         public void run() {
 
-                            Log.d("muted", String.valueOf(mute));
+                            //Log.d("muted", String.valueOf(mute));
                             if(enduro) {                        //changing number in bar for timer in SpeedoUpdate
                                 elapsedTime = System.currentTimeMillis() - refTime;
 
                                 if(started ==1){                    //when the race timer is updated, starts the value for decreasing , and reset the flags tfor interacting with firebase
                                     decreasingTime = raceTime;
                                     completed = true;
-                                    Log.d("dec", String.valueOf(decreasingTime));;
+                                    //Log.d("dec", String.valueOf(decreasingTime));;
                                     refTime = System.currentTimeMillis();
                                 }
                                 else if ((raceTime-elapsedTime)>0){     // if the timer is greater than 0, decrease it by the amount of the delay
@@ -393,7 +453,7 @@ public class MainActivity extends AppCompatActivity{
     public static boolean flashing = false; // Flag to indicate if flashing is active
 
     public static void updateMessage(String newMessage) {
-        Log.d("UpdateMessage", "New Message: " + newMessage);
+        //Log.d("UpdateMessage", "New Message: " + newMessage);
 
         if (!newMessage.equals(message)) {
             messageFlag = true;
@@ -434,8 +494,46 @@ public class MainActivity extends AppCompatActivity{
         }
 
         message = newMessage;
-        Log.d("Updated Message", newMessage);
+        //Log.d("Updated Message", newMessage);
     }
 
-}
+    private static Handler introHandler = new Handler();
 
+    public static void introAnimation() {
+        intro.setVisibility(View.VISIBLE);
+        alternateText.setVisibility(View.INVISIBLE);
+        intro.setText(""); // Start with an empty text
+
+        final String textToDisplay = "LETS GO RACING";
+        final int delayPerLetter = 100; // Delay in milliseconds between each letter
+        final int totalDuration = 5000; // Total duration in milliseconds for the animation
+
+        introHandler.postDelayed(new Runnable() {
+            private int currentIndex = 0;
+            private long startTime = System.currentTimeMillis();
+            private boolean animationComplete = false;
+
+            @Override
+            public void run() {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - startTime >= totalDuration) {
+                    // Animation finished, hide the text
+                    if (!animationComplete) {
+                        intro.setVisibility(View.GONE);
+                        alternateText.setVisibility(View.VISIBLE);
+                        animationComplete = true;
+                    }
+                    return;
+                }
+
+                // Check if intro is still visible before updating text
+                if (intro.getVisibility() == View.VISIBLE && currentIndex < textToDisplay.length()) {
+                    intro.setText(textToDisplay.substring(0, currentIndex + 1));
+                }
+
+                currentIndex++;
+                introHandler.postDelayed(this, delayPerLetter); // Delay before showing the next letter
+            }
+        }, delayPerLetter); // Start with the delay for the first letter
+    }
+}

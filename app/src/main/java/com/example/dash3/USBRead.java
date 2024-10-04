@@ -1,9 +1,6 @@
 package com.example.dash3;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.util.Log;
@@ -14,13 +11,14 @@ import com.hoho.android.usbserial.driver.UsbSerialProber;
 
 import java.io.IOException;
 import java.util.List;
+
 public class USBRead {
     private Context context;
     private volatile boolean isReading = false;
+
     public USBRead(Context context) {
         this.context = context;
     }
-    String toESP = "";
 
     public void startCommunication() {
         isReading = true;
@@ -53,64 +51,53 @@ public class USBRead {
                     throw new RuntimeException(e);
                 }
                 try {
-                    port.setParameters(115200, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);       //set baud to 9600 for arduino, 115200 for esp32
+                    port.setParameters(115200, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
 
                 final int MAX_READ_ATTEMPTS = 10;
-                final int READ_WAIT_MILLIS = 1000; // Define your read timeout
+                final int READ_WAIT_MILLIS = 1000;
 
-                StringBuilder partialData = new StringBuilder();
-
-                // Continuously read data
-                while (isReading) { // You need to set and manage the "isReading" boolean flag
-                    byte[] response = new byte[1024]; // Create a buffer to read the response                   chack if this is issue for esp32
+                StringBuilder receivedData = new StringBuilder();
+                while (isReading) {
+                    byte[] response = new byte[1024];
                     int bytesRead = 0;
                     int readAttempts = 0;
 
-                    // Repeat the read attempts until data is received or the maximum attempts are reached
                     while (bytesRead == 0 && readAttempts < MAX_READ_ATTEMPTS) {
                         try {
                             bytesRead = port.read(response, READ_WAIT_MILLIS);
                         } catch (IOException e) {
-                            e.printStackTrace(); // Handle or log the exception
+                            e.printStackTrace();
                         }
                         readAttempts++;
                     }
 
-                    // Convert the read bytes into a String
-                    synchronized (MainActivity.class) {
-                        String receivedData = new String(response, 0, bytesRead);
-                        Log.d("syncdata", "Received data: " + receivedData);
-
-                        // Handle split data
-                        String fullData = partialData + receivedData;
-                        String[] dataParts = fullData.split(",");
-
-                        if (dataParts.length > 1) {
-                            partialData = new StringBuilder(dataParts[dataParts.length - 1]);
-                            for (int i = 0; i < dataParts.length - 1; i++) {
-                                byte[] processedData = dataParts[i].getBytes();  // Convert each part back to byte[]
-                                int len = processedData.length;
-                                usbsort.processResponse(processedData, len);
+                    for (int i = 0; i < bytesRead; i++) {
+                        char c = (char) response[i];
+                        if (c == ',') {
+                            String[] words = receivedData.toString().split("\\s*,\\s*");
+                            for (String word : words) {
+                                usbsort.processResponse(word.getBytes(), word.length());
+                                Log.d("syncdata", "Received data: " + word);
                             }
-                        } else {
-                            partialData = new StringBuilder(fullData);
+                            receivedData.setLength(0);      //this was changed to clear the stack once the data is processed
+                        } else if (c != '\n') {
+                            receivedData.append(c);
                         }
                     }
                 }
 
-                // Close USB communication
                 if (port != null) {
                     try {
-                        port.close(); // Close the port
+                        port.close();
                     } catch (IOException e) {
-                        e.printStackTrace(); // Handle or log the exception
+                        e.printStackTrace();
                     }
                 }
                 if (connection != null) {
-                    connection.close(); // Close the connection
+                    connection.close();
                 }
             }
         }).start();
@@ -119,6 +106,4 @@ public class USBRead {
     public void stopCommunication() {
         isReading = false;
     }
-
-
 }

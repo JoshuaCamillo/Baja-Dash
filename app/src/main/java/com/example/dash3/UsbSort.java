@@ -7,8 +7,8 @@ public class UsbSort {
 
     public void processResponse(byte[] response, int len) {
         String data = new String(response, 0, len);
-        Log.d("UsbSort", "Received data: " + data);
-        Log.d("Fuel", String.valueOf(MainActivity.fuel));
+        //Log.d("UsbSort", "Received data: " + data);
+        //Log.d("Fuel", String.valueOf(MainActivity.fuel));
         long between;
 
         int oldLap = 0;
@@ -36,8 +36,12 @@ public class UsbSort {
 
                 if (identifier.equals("RPM")) {             //looks for 0-3800
                     MainActivity.RPM = Integer.parseInt(valueStr);
-                } else if (identifier.equals("Speed")) {        //looks for 0-40
-                    MainActivity.speedInt = Integer.parseInt(valueStr);
+                    if(Handling.datalog == 1  ){
+                        Log.d("STarting Log", String.valueOf(Handling.datalog));
+                       }
+                //} else if (identifier.equals("Speed")) {        //looks for 0-40
+                  //  MainActivity.speedInt = Integer.parseInt(valueStr);
+
                 } else if (identifier.equals("Battery")) {      //looks for 0-100
                     MainActivity.battery = Integer.parseInt(valueStr);
                 } else if (identifier.equals("Fuel")) {         //looks for 0-100
@@ -56,7 +60,8 @@ public class UsbSort {
                         MainActivity.oldPanic = MainActivity.panic;
                         MainActivity.firstPanic = false;
                     }
-
+                }else if (identifier.equals("Launch")) {
+                    MainActivity.launch = Integer.parseInt(valueStr);
                 } else if (identifier.equals("mute")) {         //looks for 0-1
                     MainActivity.mute = Integer.parseInt(valueStr);
                     if(MainActivity.mute != oldmute){
@@ -72,6 +77,7 @@ public class UsbSort {
                 }else if(identifier.equals("ECVTBattery")) {       //looks for 0-100
                     MainActivity.ECVTBat = Integer.parseInt(valueStr);
                 }
+
             }
         }
     }
